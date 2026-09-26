@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %} Homepage {% endblock %}
+
+{% block content %}
+
+<h1>Add Skill</h1>
+
+<form method="POST">
+    <label>Skill Name:</label>
+    <input type="text" name="name">
+
+    <br><br>
+
+    <label>Category:</label>
+    <input type="text" name="category">
+
+    <br><br>
+
+    <label>Proficiency:</label>
+    <input type="text" name="proficiency">
+
+    <br><br>
+
+    <button type="submit">Add Skill</button>
+</form>
+
+{% endblock %}

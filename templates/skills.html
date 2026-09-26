@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %} Homepage {% endblock %}
+
+{% block content %}
+
+<h1>My Skills </h1>
+<a href="{{ url_for ('add_skill') }}"> Add Skill </a>
+{% for skill in skills %}
+
+<div class="skills">
+    <h2> {{ skill.name }} </h2>
+    <p> Category: {{skill.category }} </p>
+    <p> Proficiency: {{ skill.proficiency }} </p>
+</div>
+
+{% endfor %}
+
+{% endblock %}

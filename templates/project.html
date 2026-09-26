@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %} Homepage {% endblock %}
+
+{% block content %}
+<h1>{{ project.title }}</h1>
+<P>{{ project.description }}</P>
+<p>
+    Technologies: {{ project.technology }}
+</p>
+
+<a href="/projects">
+    Back to projects
+</a>
+{% endblock %}
