@@ -1,19 +1,54 @@
 {% extends "base.html" %}
 
-{% block title %} Homepage {% endblock %}
+{% block title %}My Skills{% endblock %}
 
 {% block content %}
 
-<h1>My Skills </h1>
-<a href="{{ url_for ('add_skill') }}"> Add Skill </a>
-{% for skill in skills %}
+<div class="container">
 
-<div class="skills">
-    <h2> {{ skill.name }} </h2>
-    <p> Category: {{skill.category }} </p>
-    <p> Proficiency: {{ skill.proficiency }} </p>
+    <a href="/" class="back-link">←</a>
+
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1">My Skills</h1>
+        <p class="text-muted">
+            Technologies and skills I'm currently developing.
+        </p>
+    </div>
+
+    <div class="row g-4">
+
+        {% for skill in skills %}
+
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <h2 class="card-title h4 fw-bold">
+                        {{ skill.name }}
+                    </h2>
+
+                    <p class="card-text mb-2">
+                        <strong>Category:</strong>
+                        {{ skill.category }}
+                    </p>
+
+                    <p class="card-text">
+                        <strong>Proficiency:</strong>
+                        {{ skill.proficiency }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
 </div>
-
-{% endfor %}
 
 {% endblock %}

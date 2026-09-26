@@ -1,33 +1,78 @@
 {% extends "base.html" %}
 
-{% block title %} Homepage {% endblock %}
+{% block title %}Admin Login{% endblock %}
 
 {% block content %}
-<h1>Admin Login</h1>
 
-<form method="POST">
-    <label>Username</label>
-    <input type="text" name="username" required>
+<div class="container py-5">
 
-    <br><br>
+    <div class="row justify-content-center">
 
-    <label>Password</label>
-    <input type="password" name="password" required>
+        <div class="col-md-6 col-lg-4">
 
-    <br><br>
+            <div class="card shadow-sm border-0">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="card-body p-4">
+
+                    <h1 class="fw-bold text-center mb-4">
+                        Admin Login
+                    </h1>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+
+                    {% for category, message in messages %}
+
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+
+                        {{ message }}
+
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                        </button>
+
+                    </div>
+
+                    {% endfor %}
+
+                    {% endif %}
+                    {% endwith %}
+
+                    <form method="POST">
+
+                        <div class="mb-3">
+
+                            <label for="username" class="form-label fw-semibold">
+                                Username
+                            </label>
+
+                            <input type="text" class="form-control" id="username" name="username" required>
+
+                        </div>
+
+                        <div class="mb-4">
+
+                            <label for="password" class="form-label fw-semibold">
+                                Password
+                            </label>
+
+                            <input type="password" class="form-control" id="password" name="password" required>
+
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Login
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
 
-    <button type="submit">Login</button>
+</div>
 
-</form>
 {% endblock %}

@@ -1,7 +1,115 @@
 {% extends "base.html" %}
 
-{% block title %} Homepage {% endblock %}
+{% block title %}Homepage{% endblock %}
 
 {% block content %}
-<h1>Hello World!</h1>
+
+<div class="container py-5">
+
+    <div class="row align-items-center min-vh-75">
+
+        <div class="col-lg-8">
+
+            <p class="text-primary fw-semibold mb-2">
+                Welcome to my portfolio
+            </p>
+
+            <h1 class="display-3 fw-bold mb-3">
+                Hi, I'm
+                <span class="text-primary">James Israel Figueroa</span>
+                a BSIT student passionate about technology.
+            </h1>
+
+            <p class="lead text-muted mb-4">
+                I'm an aspiring IT professional building my skills in
+                software development, web development, databases, and
+                cybersecurity. This portfolio showcases the projects
+                I've built and the technologies I'm currently learning.
+            </p>
+
+            <div class="d-flex gap-2 flex-wrap">
+
+                <a href="/projects" class="btn btn-primary btn-lg">
+                    View My Projects
+                </a>
+
+                <a href="/skills" class="btn btn-outline-secondary btn-lg">
+                    My Skills
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="skills" class="mt-5 pt-5">
+
+        <h2 class="fw-bold mb-3">
+            What I Work With
+        </h2>
+
+        <p class="text-muted mb-4">
+            Technologies and tools I'm currently developing my skills in.
+        </p>
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="fw-bold">Programming</h5>
+                        <p class="text-muted mb-0">
+                            Java and Python
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="fw-bold">Web Development</h5>
+                        <p class="text-muted mb-0">
+                            HTML, CSS, JavaScript, and Flask
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="fw-bold">Database</h5>
+                        <p class="text-muted mb-0">
+                            SQL and MySQL
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="text-center mt-5 pt-5">
+
+        <h2 class="fw-bold">
+            Interested in what I've built?
+        </h2>
+
+        <p class="text-muted mb-4">
+            Take a look at my projects and see what I'm working on.
+        </p>
+
+        <a href="/projects" class="btn btn-primary">
+            Explore My Projects
+        </a>
+
+    </div>
+
+</div>
+
 {% endblock %}

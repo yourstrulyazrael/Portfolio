@@ -1,28 +1,78 @@
 {% extends "base.html" %}
 
-{% block title %} Homepage {% endblock %}
+{% block title %}Add Skill{% endblock %}
 
 {% block content %}
 
-<h1>Add Skill</h1>
+<div class="container py-5">
 
-<form method="POST">
-    <label>Skill Name:</label>
-    <input type="text" name="name">
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1">Add Skill</h1>
+        <p class="text-muted">
+            Add a new skill to your portfolio.
+        </p>
+    </div>
 
-    <br><br>
 
-    <label>Category:</label>
-    <input type="text" name="category">
+    <div class="card shadow-sm border-0">
 
-    <br><br>
+        <div class="card-body p-4">
 
-    <label>Proficiency:</label>
-    <input type="text" name="proficiency">
+            <form method="POST">
 
-    <br><br>
+                <div class="mb-3">
 
-    <button type="submit">Add Skill</button>
-</form>
+                    <label for="name" class="form-label fw-semibold">
+                        Skill Name
+                    </label>
+
+                    <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Python" required>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label for="category" class="form-label fw-semibold">
+                        Category
+                    </label>
+
+                    <input type="text" class="form-control" id="category" name="category" placeholder="e.g. Programming"
+                        required>
+
+                </div>
+
+
+                <div class="mb-4">
+
+                    <label for="proficiency" class="form-label fw-semibold">
+                        Proficiency
+                    </label>
+
+                    <input type="text" class="form-control" id="proficiency" name="proficiency"
+                        placeholder="e.g. Intermediate" required>
+
+                </div>
+
+
+                <div class="d-flex gap-2">
+
+                    <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                        Back
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        Add Skill
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
 
 {% endblock %}

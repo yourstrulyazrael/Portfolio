@@ -18,6 +18,15 @@ print("Database connected")
 def home():
     return render_template("index.html")
 
+@app.route("/search") 
+def search(): 
+    query = request.args.get("q", "") 
+    cursor = db.cursor(dictionary=True) 
+    cursor.execute(""" SELECT * FROM projects WHERE title LIKE %s OR description LIKE %s OR technology LIKE %s """, ( f"%{query}%", f"%{query}%", f"%{query}%" )) 
+    projects = cursor.fetchall() 
+    cursor.close() 
+    return render_template("search.html", projects=projects, query=query)
+
 @app.route('/login', methods = ["GET", "POST"])
 def login():
     if "user_id" in session:
@@ -49,12 +58,15 @@ def admin():
     cursor = db.cursor(dictionary=True)
 
     cursor.execute("SELECT * FROM projects")
-
     projects = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM skills")
+    skills = cursor.fetchall()
 
     cursor.close()
 
-    return render_template("admin.html", projects = projects)
+
+    return render_template("admin.html", projects = projects, skills = skills)
 
 @app.route('/logout')
 def logout():
@@ -143,7 +155,7 @@ def about():
     return render_template("about.html")
 
 @app.route('/skills')
-def skills():
+def skills_page():
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM skills")
     skills = cursor.fetchall()
@@ -164,9 +176,57 @@ def add_skill():
         cursor.execute("INSERT INTO skills (name, category, proficiency) VALUES (%s, %s, %s)", (name, category, proficiency))
         db.commit()
         cursor.close()
-        flash("Skill added successfully!")
+        flash("Skill added successfully!", "success")
         return redirect(url_for('admin'))
     return render_template("add_skill.html")
+
+@app.route('/admin/edit-skill/<int:skill_id>', methods = ["GET", "POST"])
+def edit_skill(skill_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM skills WHERE id = %s", (skill_id,))
+
+    skill = cursor.fetchone()
+
+    cursor.close()
+
+    if skill is None:
+        abort(404)
+
+    if request.method == "POST":
+        name = request.form["name"]
+        category = request.form["category"]
+        proficiency = request.form["proficiency"]
+
+        cursor = db.cursor()
+
+
+        cursor.execute("UPDATE skills SET name = %s, category = %s, proficiency = %s WHERE id = %s", (name, category, proficiency, skill_id))
+
+        db.commit()
+        cursor.close()
+        flash("Skill updated successfully!", "success")
+        return redirect(url_for("admin"))
+    return render_template("edit_skill.html", skill = skill)
+
+@app.route('/admin/delete-skill/<int:skill_id>', methods = ["POST"])
+def delete_skill(skill_id):
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+
+
+    cursor = db.cursor()
+
+    cursor.execute("DELETE FROM skills WHERE id = %s", (skill_id,))
+
+    db.commit()
+    cursor.close()
+    flash("Skill deleted successfully!", "success")
+    return redirect(url_for('admin'))
+
 @app.route('/projects')
 def project_page():
     cursor = db.cursor(dictionary=True)

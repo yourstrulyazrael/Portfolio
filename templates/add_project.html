@@ -1,40 +1,104 @@
 {% extends "base.html" %}
 
-{% block title %} Homepage {% endblock %}
+{% block title %}Add Project{% endblock %}
 
 {% block content %}
-<h1>Add Project</h1>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-{% for category, message in messages %}
-<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="container py-5">
+
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1">Add Project</h1>
+        <p class="text-muted">
+            Add a new project to your portfolio.
+        </p>
+    </div>
+
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+
+    {% for category, message in messages %}
+
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+
+        {{ message }}
+
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        </button>
+
+    </div>
+
+    {% endfor %}
+
+    {% endif %}
+    {% endwith %}
+
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body p-4">
+
+            <form method="POST">
+
+                <div class="mb-3">
+
+                    <label for="title" class="form-label fw-semibold">
+                        Title
+                    </label>
+
+                    <input type="text" class="form-control" id="title" name="title" placeholder="e.g. Portfolio Website"
+                        required>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label for="description" class="form-label fw-semibold">
+                        Description
+                    </label>
+
+                    <textarea class="form-control" id="description" name="description" rows="5"
+                        placeholder="Describe your project..." required></textarea>
+
+                </div>
+
+
+
+                <div class="mb-4">
+
+                    <label for="technology" class="form-label fw-semibold">
+                        Technology
+                    </label>
+
+                    <input type="text" class="form-control" id="technology" name="technology"
+                        placeholder="e.g. HTML, CSS, JavaScript, Flask" required>
+
+                    <div class="form-text">
+                        Separate multiple technologies with commas.
+                    </div>
+
+                </div>
+
+
+                <div class="d-flex gap-2">
+
+                    <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                        Back
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        Add Project
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
 </div>
-{% endfor %}
-{% endif %}
-{% endwith %}
 
-<form method="POST">
-    <label>Title</label>
-    <input type="text" name="title">
-
-    <br><br>
-
-    <label>Description</label>
-    <textarea name="description"></textarea>
-
-    <br><br>
-
-    <label>Technology</label>
-    <input type="text" name="technology">
-
-    <br><br>
-
-    <a href="{{ url_for ('admin')}}">Back</a>
-    <button type="submit">Add Project</button>
-
-
-</form>
 {% endblock %}
