@@ -22,7 +22,23 @@ def home():
 def search(): 
     query = request.args.get("q", "") 
     cursor = db.cursor(dictionary=True) 
-    cursor.execute(""" SELECT * FROM projects WHERE title LIKE %s OR description LIKE %s OR technology LIKE %s """, ( f"%{query}%", f"%{query}%", f"%{query}%" )) 
+    cursor.execute(""" SELECT DISTINCT
+            projects.id,
+            projects.title,
+            projects.description
+        FROM projects
+        LEFT JOIN project_technologies
+            ON projects.id = project_technologies.project_id
+        LEFT JOIN technologies
+            ON project_technologies.technology_id = technologies.id
+        WHERE projects.title LIKE %s
+           OR projects.description LIKE %s
+           OR technologies.name LIKE %s
+    """, (
+        f"%{query}%",
+        f"%{query}%",
+        f"%{query}%"
+    ))
     projects = cursor.fetchall() 
     cursor.close() 
     return render_template("search.html", projects=projects, query=query)
