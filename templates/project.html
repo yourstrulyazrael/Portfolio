@@ -20,9 +20,14 @@
 
             <div class="mb-4">
                 <h5 class="fw-semibold">Technologies</h5>
-                <p class="mb-0">
-                    {{ project.technology }}
-                </p>
+
+                {% for technology in technologies %}
+                <span class="badge bg-primary me-1">
+                    {{ technology.name }}
+                </span>
+                {% endfor %}
+
+
             </div>
 
             <a href="{{ url_for('project_page') }}" class="btn btn-outline-secondary">

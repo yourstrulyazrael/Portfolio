@@ -25,18 +25,41 @@
 
                 <div class="card-body">
 
-                    <h2 class="card-title h4 fw-bold">
+                    <h2 class="card-title h4 fw-bold mb-3">
                         {{ skill.name }}
                     </h2>
 
                     <p class="card-text mb-2">
                         <strong>Category:</strong>
-                        {{ skill.category }}
+                        <span class="badge bg-primary">
+                            {{ skill.category }}
+                        </span>
                     </p>
 
                     <p class="card-text">
                         <strong>Proficiency:</strong>
-                        {{ skill.proficiency }}
+
+                        {% if skill.proficiency == "Beginner" %}
+                        <span class="badge bg-warning text-dark">
+                            {{ skill.proficiency }}
+                        </span>
+
+                        {% elif skill.proficiency == "Intermediate" %}
+                        <span class="badge bg-info text-dark">
+                            {{ skill.proficiency }}
+                        </span>
+
+                        {% elif skill.proficiency == "Advanced" %}
+                        <span class="badge bg-success">
+                            {{ skill.proficiency }}
+                        </span>
+
+                        {% else %}
+                        <span class="badge bg-secondary">
+                            {{ skill.proficiency }}
+                        </span>
+                        {% endif %}
+
                     </p>
 
                 </div>

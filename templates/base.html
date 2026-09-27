@@ -4,18 +4,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
     <style>
         body {
             background:
-                radial-gradient(circle at 15% 20%, rgba(88, 28, 135, 0.35), transparent 25%),
-                radial-gradient(circle at 85% 25%, rgba(37, 99, 235, 0.25), transparent 25%),
-                radial-gradient(circle at 50% 90%, rgba(124, 58, 237, 0.2), transparent 30%),
+                radial-gradient(circle at 15% 20%,
+                    rgba(88, 28, 135, 0.35),
+                    transparent 25%),
+                radial-gradient(circle at 85% 25%,
+                    rgba(37, 99, 235, 0.25),
+                    transparent 25%),
+                radial-gradient(circle at 50% 90%,
+                    rgba(124, 58, 237, 0.2),
+                    transparent 30%),
                 #050816;
+
+            background-size: 150% 150%;
             color: #f8f9fa;
             min-height: 100vh;
             position: relative;
+            animation: galaxyMove 20s ease-in-out infinite alternate;
+        }
+
+        .container,
+        .container-fluid {
+            position: relative;
+            z-index: 1;
         }
 
         body::before {
@@ -23,6 +40,7 @@
             position: fixed;
             inset: 0;
             pointer-events: none;
+
             background-image:
                 radial-gradient(1px 1px at 10% 20%, white, transparent),
                 radial-gradient(1px 1px at 20% 80%, white, transparent),
@@ -32,13 +50,34 @@
                 radial-gradient(1px 1px at 75% 25%, white, transparent),
                 radial-gradient(1px 1px at 90% 60%, white, transparent),
                 radial-gradient(1px 1px at 95% 90%, white, transparent);
+
             background-size: 250px 250px;
+            animation: starsMove 60s linear infinite;
             opacity: 0.6;
         }
 
-        .container {
-            position: relative;
-            z-index: 1;
+        @keyframes galaxyMove {
+            0% {
+                background-position: 0% 0%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 100%;
+            }
+        }
+
+        @keyframes starsMove {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 250px 250px;
+            }
         }
 
         .navbar {
@@ -52,9 +91,22 @@
             color: #f8f9fa !important;
         }
 
+        .navbar-brand:hover,
         .nav-link:hover,
         .nav-link.active {
             color: #8b5cf6 !important;
+        }
+
+        .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.2);
+        }
+
+        .navbar-toggler-icon {
+            filter: invert(1);
         }
 
         .card {
@@ -73,8 +125,25 @@
             color: #cbd5e1;
         }
 
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: #ffffff;
+        }
+
+        .lead {
+            color: #cbd5e1;
+        }
+
         .text-muted {
             color: #94a3b8 !important;
+        }
+
+        .form-text {
+            color: #94a3b8;
         }
 
         .form-label {
@@ -141,23 +210,6 @@
             color: #ffffff;
         }
 
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            color: #ffffff;
-        }
-
-        .lead {
-            color: #cbd5e1;
-        }
-
-        .form-text {
-            color: #94a3b8;
-        }
-
         #searchResults {
             background-color: #0f172a !important;
             border-color: rgba(255, 255, 255, 0.15) !important;
@@ -179,56 +231,57 @@
         }
     </style>
 
-    <title>{% block title %}{% endblock %}</title>
+    <title>{% block title %}MyPortfolio{% endblock %}</title>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+
+    <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">MyPortfolio</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                aria-label="Toggle navigation">
+
+            <a class="navbar-brand fw-semibold" href="/">
+                MyPortfolio
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Home</a>
-                    </li>
-                    {% if session.get("user_id") %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin') }}">Dashboard</a>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/projects">Projects</a>
-                    </li>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
+                    <li class="nav-item"> <a class="nav-link" href="/"> Home </a> </li>
+                    <li class="nav-item"> <a class="nav-link" href="/projects"> Projects </a> </li>
+                    <li class="nav-item"> <a class="nav-link" href="{{ url_for('contact') }}"> Contact </a> </li> {% if
+                    session.get("user_id") %} <li class="nav-item"> <a class="nav-link" href="{{ url_for('admin') }}">
+                            Dashboard </a> </li> {% else %} <li class="nav-item"> <a class="nav-link"
+                            href="{{ url_for('login') }}"> Login </a> </li> {% endif %}
                 </ul>
 
                 <form class="d-flex position-relative" role="search" method="GET" action="/search">
                     <input class="form-control me-2" type="search" name="q" id="searchInput"
                         placeholder="Search for projects..." aria-label="Search" autocomplete="off">
-                    <button class="btn btn-outline-success" type="submit">Search</button>
 
-                    <div id="searchResults" class="position-absolute bg-white border rounded shadow-sm w-100"
-                        style="top: 100%; left: 0; z-index: 1000; display: none;">
-                    </div>
+                    <button class="btn btn-outline-success" type="submit">
+                        Search
+                    </button>
+
+                    <div id="searchResults" class="position-absolute rounded shadow-sm w-100"
+                        style="top: 100%; left: 0; z-index: 1000; display: none;"></div>
                 </form>
-
 
             </div>
         </div>
     </nav>
-    {% block content%}
+
+    {% block content %}
     {% endblock %}
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYJwR9WcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
+
 </body>
 
 </html>

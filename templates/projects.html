@@ -33,8 +33,18 @@
 
                     <p class="card-text">
                         <strong>Technologies:</strong>
-                        {{ project.technology }}
+                        {% if project.technologies %}
+                        {% for technology in project.technologies.split(', ') %}
+                        <span class="badge bg-primary me-1">
+                            {{ technology }}
+                        </span>
+                        {% endfor %}
+                        {% else %}
+                        <span class="text-muted">None</span>
+                        {% endif %}
                     </p>
+
+
 
                     <div class="mt-auto pt-3">
 
