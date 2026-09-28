@@ -18,30 +18,52 @@ print("Database connected")
 def home():
     return render_template("index.html")
 
+
 @app.route("/search") 
-def search(): 
-    query = request.args.get("q", "") 
-    cursor = db.cursor(dictionary=True) 
-    cursor.execute(""" SELECT DISTINCT
+def search():
+
+    query = request.args.get("q", "")
+
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT
             projects.id,
             projects.title,
-            projects.description
+            projects.description,
+            GROUP_CONCAT(DISTINCT technologies.name SEPARATOR ', ') AS technologies
         FROM projects
+
         LEFT JOIN project_technologies
             ON projects.id = project_technologies.project_id
+
         LEFT JOIN technologies
             ON project_technologies.technology_id = technologies.id
+
         WHERE projects.title LIKE %s
            OR projects.description LIKE %s
            OR technologies.name LIKE %s
+
+        GROUP BY
+            projects.id,
+            projects.title,
+            projects.description
+
     """, (
         f"%{query}%",
         f"%{query}%",
         f"%{query}%"
     ))
-    projects = cursor.fetchall() 
-    cursor.close() 
-    return render_template("search.html", projects=projects, query=query)
+
+    projects = cursor.fetchall()
+
+    cursor.close()
+
+    return render_template(
+        "search.html",
+        projects=projects,
+        query=query
+    )
 
 @app.route('/login', methods = ["GET", "POST"])
 def login():
