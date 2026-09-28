@@ -251,15 +251,19 @@
             <div class="collapse navbar-collapse" id="navbarContent">
 
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
-                    <li class="nav-item"> <a class="nav-link" href="/"> Home </a> </li>
-                    <li class="nav-item"> <a class="nav-link" href="/projects"> Projects </a> </li>
-                    <li class="nav-item"> <a class="nav-link" href="{{ url_for('contact') }}"> Contact </a> </li> {% if
-                    session.get("user_id") %} <li class="nav-item"> <a class="nav-link" href="{{ url_for('admin') }}">
-                            Dashboard </a> </li> {% else %} <li class="nav-item"> <a class="nav-link"
-                            href="{{ url_for('login') }}"> Login </a> </li> {% endif %}
+                    <li class="nav-item"> <a class="nav-link" href="{{ url_for('public.home') }}"> Home </a> </li>
+                    <li class="nav-item"> <a class="nav-link" href="{{ url_for('public.project_page') }}"> Projects </a>
+                    </li>
+                    <li class="nav-item"> <a class="nav-link" href="{{ url_for('public.contact') }}"> Contact </a> </li>
+                    {% if session.get("user_id") %} <li class="nav-item"> <a class="nav-link"
+                            href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    {% else %}
+                    <li class="nav-item"> <a class="nav-link" href="{{ url_for('auth.login') }}"> Login </a> </li>
+                    {% endif %}
                 </ul>
 
-                <form class="d-flex position-relative" role="search" method="GET" action="/search">
+                <form class="d-flex position-relative" role="search" method="GET"
+                    action="{{ url_for('public.search') }}">
                     <input class="form-control me-2" type="search" name="q" id="searchInput"
                         placeholder="Search for projects..." aria-label="Search" autocomplete="off">
 
