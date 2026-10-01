@@ -36,7 +36,7 @@
 
         <div class="card-body p-4">
 
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
 
                 <div class="mb-3">
 
@@ -80,6 +80,19 @@
                     </div>
 
                     {% endfor %}
+
+                    <div class="mb-3">
+                        <label for="github_url" class="form-label">GitHub URL</label>
+                        <input type="url" class="form-control" id="github_url" name="github_url"
+                            placeholder="https://github.com/username/repository">
+                    </div>
+
+
+
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Project Image</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                    </div>
 
                 </div>
 

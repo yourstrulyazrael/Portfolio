@@ -4,9 +4,15 @@
 
 {% block content %}
 
+
 <div class="container py-5">
 
     <div class="card shadow-sm border-0">
+
+        {% if project.image %}
+        <img src="{{ url_for('static', filename='images/projects/' + project.image) }}" class="img-fluid rounded mb-4"
+            alt="{{ project.title }}">
+        {% endif %}
 
         <div class="card-body p-4">
 
@@ -29,6 +35,12 @@
 
 
             </div>
+
+            {% if project.github_url %}
+            <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-dark me-2">
+                View on GitHub
+            </a>
+            {% endif %}
 
             <a href="{{ url_for('public.project_page') }}" class="btn btn-outline-secondary">
                 Back to Projects

@@ -1,7 +1,15 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request, abort
 from database import db
+import os
+from werkzeug.utils import secure_filename
+
 
 admin = Blueprint("admin", __name__)
+
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @admin.route('/admin')
 def dashboard():
@@ -37,13 +45,12 @@ def dashboard():
 
     return render_template("admin.html", projects = projects, skills = skills, messages = messages)
 
-@admin.route('/admin/add-project', methods = ["GET", "POST"])
+@admin.route('/admin/add-project', methods=["GET", "POST"])
 def add_project():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
     cursor = db.cursor(dictionary=True)
-
     cursor.execute("SELECT * FROM technologies ORDER BY name")
 
     technologies = cursor.fetchall()
@@ -52,32 +59,47 @@ def add_project():
     if request.method == "POST":
         title = request.form["title"]
         description = request.form["description"]
+        github_url = request.form["github_url"]
         technology_ids = request.form.getlist("technologies")
+        image = request.files.get("image")
+
+        filename = None
+
+        if image and image.filename:
+            if not allowed_file(image.filename):
+                flash("Invalid image type.", "error")
+                return redirect(url_for("admin.add_project"))
+
+            filename = secure_filename(image.filename)
+            image.save("static/images/projects/" + filename)
 
         cursor = db.cursor()
 
-        cursor.execute("INSERT INTO projects (title, description) VALUES (%s, %s)", (title,
-        description))
+        cursor.execute("""
+            INSERT INTO projects (title, description, github_url, image)
+            VALUES (%s, %s, %s, %s)
+        """, (title, description, github_url, filename))
 
         project_id = cursor.lastrowid
 
         for technology_id in technology_ids:
             cursor.execute("""
                 INSERT INTO project_technologies (project_id, technology_id)
-                VALUES(%s, %s)
-                """,
-                (project_id, technology_id)
-                )
+                VALUES (%s, %s)
+            """, (project_id, technology_id))
+
         db.commit()
         cursor.close()
 
         flash("Project added successfully!", "success")
-
         return redirect(url_for("admin.dashboard"))
-    return render_template("add_project.html",
-                           technologies = technologies)
 
-@admin.route('/admin/edit-project/<int:project_id>', methods = ["GET", "POST"])
+    return render_template(
+        "add_project.html",
+        technologies=technologies
+    )
+
+@admin.route('/admin/edit-project/<int:project_id>', methods=["GET", "POST"])
 def edit_project(project_id):
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
@@ -93,8 +115,8 @@ def edit_project(project_id):
     cursor.execute("""
         SELECT technology_id
         FROM project_technologies
-        WHERE project_id = %s""",
-        (project_id,))
+        WHERE project_id = %s
+    """, (project_id,))
 
     assigned_technologies = cursor.fetchall()
     cursor.close()
@@ -105,35 +127,65 @@ def edit_project(project_id):
     if request.method == "POST":
         title = request.form["title"]
         description = request.form["description"]
+        github_url = request.form["github_url"]
         technology_ids = request.form.getlist("technologies")
+        image = request.files.get("image")
+
+        if image and image.filename:
+            filename = secure_filename(image.filename)
+            old_image = project["image"]
+            image.save("static/images/projects/" + filename)
+
+            if old_image:
+                old_image_path = os.path.join("static/images/projects", old_image)
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
 
         cursor = db.cursor()
 
-        cursor.execute("""UPDATE projects
-                       SET title = %s,
-                       description = %s
-                       WHERE id = %s""",
-                       (title, description, project_id))
+        if image and image.filename:
+            cursor.execute("""
+                UPDATE projects
+                SET title = %s,
+                    description = %s,
+                    github_url = %s,
+                    image = %s
+                WHERE id = %s
+            """, (title, description, github_url, filename, project_id))
 
-        cursor.execute("DELETE FROM project_technologies WHERE project_id = %s", 
-                       (project_id,))
+        else:
+            cursor.execute("""
+                UPDATE projects
+                SET title = %s,
+                    description = %s,
+                    github_url = %s
+                WHERE id = %s
+            """, (title, description, github_url, project_id))
+
+        cursor.execute(
+            "DELETE FROM project_technologies WHERE project_id = %s",
+            (project_id,)
+        )
+
         for technology_id in technology_ids:
             cursor.execute("""
-                    INSERT INTO project_technologies(project_id, technology_id)
-                    VALUES(%s, %s)
-                    """,
-                    (project_id, technology_id)
-                    )
+                INSERT INTO project_technologies(project_id, technology_id)
+                VALUES(%s, %s)
+            """, (project_id, technology_id))
+
         db.commit()
         cursor.close()
+
         flash("Project updated successfully!", "success")
+
         return redirect(url_for("admin.dashboard"))
 
-    return render_template("edit_project.html", 
-                           project = project,
-                           technologies = technologies,
-                           assigned_technologies = assigned_technologies
-                           )
+    return render_template(
+        "edit_project.html",
+        project=project,
+        technologies=technologies,
+        assigned_technologies=assigned_technologies
+    )
 
 @admin.route('/admin/delete-project/<int:project_id>', methods = ["POST"])
 def delete_project(project_id):
