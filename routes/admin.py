@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request, abort
 from database import db
 import os
+import uuid
 from werkzeug.utils import secure_filename
 
 
@@ -70,7 +71,10 @@ def add_project():
                 flash("Invalid image type.", "error")
                 return redirect(url_for("admin.add_project"))
 
-            filename = secure_filename(image.filename)
+            original_filename = secure_filename(image.filename)
+            extension = os.path.splitext(original_filename)[1].lower()
+
+            filename = f"{uuid.uuid4().hex}{extension}"
             image.save("static/images/projects/" + filename)
 
         cursor = db.cursor()
@@ -132,7 +136,14 @@ def edit_project(project_id):
         image = request.files.get("image")
 
         if image and image.filename:
-            filename = secure_filename(image.filename)
+            if not allowed_file(image.filename):
+                flash("Invalid image type.", "danger    ")
+                return redirect(url_for("admin.edit_project", project_id = project_id))
+
+            original_filename = secure_filename(image.filename)
+            extension = os.path.splitext(original_filename)[1].lower()
+
+            filename = f'{uuid.uuid4().hex}{extension}'
             old_image = project["image"]
             image.save("static/images/projects/" + filename)
 
@@ -187,20 +198,46 @@ def edit_project(project_id):
         assigned_technologies=assigned_technologies
     )
 
-@admin.route('/admin/delete-project/<int:project_id>', methods = ["POST"])
+@admin.route('/admin/delete-project/<int:project_id>', methods=["POST"])
 def delete_project(project_id):
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
-    
+
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute(
+        "SELECT image FROM projects WHERE id = %s",
+        (project_id,)
+    )
+
+    project = cursor.fetchone()
+
+    if project is None:
+        cursor.close()
+        abort(404)
+
+    cursor.close()
+
+    if project["image"]:
+        image_path = os.path.join(
+            "static/images/projects",
+            project["image"]
+        )
+
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
     cursor = db.cursor()
 
-    cursor.execute("DELETE FROM projects WHERE id = %s", (project_id,))
-    
+    cursor.execute(
+        "DELETE FROM projects WHERE id = %s",
+        (project_id,)
+    )
+
     db.commit()
     cursor.close()
 
     flash("Project deleted successfully!", "success")
-
     return redirect(url_for("admin.dashboard"))
 
 
