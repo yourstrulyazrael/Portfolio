@@ -66,13 +66,25 @@
 
                 <div>
 
-                    <div class="mb-3">
-                        <label for="github_url" class="form-label fw-semibold">
-                            GitHub URL
-                        </label>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="live_url" class="form-label fw-semibold">
+                                Live Website URL
+                            </label>
 
-                        <input type="url" class="form-control" id="github_url" name="github_url"
-                            value="{{ project.github_url or '' }}" placeholder="https://github.com/username/repository">
+                            <input type="url" class="form-control" id="live_url" name="live_url"
+                                value="{{ project.live_url or '' }}" placeholder="https://my-project.vercel.app">
+                            <div class="form-text">Where the deployed project can be visited.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="github_url" class="form-label fw-semibold">
+                                GitHub URL
+                            </label>
+
+                            <input type="url" class="form-control" id="github_url" name="github_url"
+                                value="{{ project.github_url or '' }}" placeholder="https://github.com/username/repository">
+                        </div>
                     </div>
 
                     {% if images %}

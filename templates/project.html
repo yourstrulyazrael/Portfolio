@@ -1,92 +1,130 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}{{ project.title }}{% endblock %}
 
 {% block content %}
 
+<div class="container">
 
-<div class="container py-5">
+    <a href="{{ url_for('public.project_page') }}" class="back-link" aria-label="Back to projects">←</a>
 
-    <div class="card shadow-sm border-0">
+    <header class="page-header">
+        <p class="eyebrow">Project</p>
+        <h1 class="fw-bold mb-0">{{ project.title }}</h1>
+    </header>
 
-        {% if images %}
-        <div class="project-gallery">
+    <div class="row g-4">
 
-            <div id="projectCarousel" class="carousel slide" data-bs-ride="false">
+        <div class="col-lg-8">
 
-                <div class="carousel-inner">
-                    {% for image in images %}
-                    <div class="carousel-item {% if loop.first %}active{% endif %}">
-                        <img src="{{ media_url('projects', image.filename) }}"
-                            class="d-block w-100" alt="{{ project.title }} image {{ loop.index }}">
+            {% if images %}
+            <div class="card project-gallery">
+
+                <div id="projectCarousel" class="carousel slide" data-bs-ride="false">
+
+                    <div class="carousel-inner">
+                        {% for image in images %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <div class="skeleton-media">
+                                <img src="{{ media_url('projects', image.filename) }}" class="d-block w-100"
+                                    alt="{{ project.title }} image {{ loop.index }}" decoding="async"
+                                    {% if not loop.first %}loading="lazy" {% endif %}data-skeleton>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
+
+                    {% if images | length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#projectCarousel"
+                        data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+
+                    <button class="carousel-control-next" type="button" data-bs-target="#projectCarousel"
+                        data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+
+                    <span class="carousel-counter" id="carouselCounter">1 / {{ images | length }}</span>
+                    {% endif %}
+
                 </div>
 
                 {% if images | length > 1 %}
-                <button class="carousel-control-prev" type="button" data-bs-target="#projectCarousel"
-                    data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
-                </button>
-
-                <button class="carousel-control-next" type="button" data-bs-target="#projectCarousel"
-                    data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
-                </button>
+                <div class="gallery-thumbs">
+                    {% for image in images %}
+                    <button type="button" data-bs-target="#projectCarousel" data-bs-slide-to="{{ loop.index0 }}"
+                        class="{% if loop.first %}active{% endif %}" aria-label="Show image {{ loop.index }}"
+                        {% if loop.first %}aria-current="true" {% endif %}>
+                        <span class="skeleton-media">
+                            <img src="{{ media_url('projects', image.filename) }}" alt="" decoding="async"
+                                data-skeleton>
+                        </span>
+                    </button>
+                    {% endfor %}
+                </div>
                 {% endif %}
 
             </div>
-
-            {% if images | length > 1 %}
-            <div class="gallery-thumbs">
-                {% for image in images %}
-                <button type="button" data-bs-target="#projectCarousel" data-bs-slide-to="{{ loop.index0 }}"
-                    class="{% if loop.first %}active{% endif %}" aria-label="Show image {{ loop.index }}"
-                    {% if loop.first %}aria-current="true" {% endif %}>
-                    <img src="{{ media_url('projects', image.filename) }}" alt="">
-                </button>
-                {% endfor %}
-            </div>
             {% endif %}
 
-        </div>
-        {% endif %}
-
-        <div class="card-body p-4">
-
-            <h1 class="fw-bold mb-3">
-                {{ project.title }}
-            </h1>
-
-            <p class="text-muted mb-4">
-                {{ project.description }}
-            </p>
-
-            <div class="mb-4">
-                <h5 class="fw-semibold">Technologies</h5>
-
-                {% for technology in technologies %}
-                <span class="badge bg-primary me-1">
-                    {{ technology.name }}
-                </span>
-                {% endfor %}
-
-
+            <div class="card mt-4">
+                <div class="card-body p-4">
+                    <h2 class="h5 fw-semibold mb-3">About this project</h2>
+                    <p class="text-soft mb-0 project-description">{{ project.description }}</p>
+                </div>
             </div>
 
-            {% if project.github_url %}
-            <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-dark me-2">
-                View on GitHub
-            </a>
-            {% endif %}
-
-            <a href="{{ url_for('public.project_page') }}" class="btn btn-outline-secondary">
-                Back to Projects
-            </a>
-
         </div>
+
+        <aside class="col-lg-4">
+
+            <div class="card project-sidebar">
+                <div class="card-body p-4">
+
+                    {% if project.live_url or project.github_url %}
+                    <div class="d-grid gap-2 mb-4">
+                        {% if project.live_url %}
+                        <a href="{{ project.live_url }}" target="_blank" rel="noopener noreferrer"
+                            class="btn btn-primary btn-icon justify-content-center">
+                            {{ icon('external') }} Visit Live Site
+                        </a>
+                        {% endif %}
+
+                        {% if project.github_url %}
+                        <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer"
+                            class="btn btn-outline-secondary btn-icon justify-content-center">
+                            {{ icon('github') }} View Source Code
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <h2 class="sidebar-label">Built with</h2>
+
+                    {% if technologies %}
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for technology in technologies %}
+                        <span class="badge bg-primary">{{ technology.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small mb-0">No technologies listed.</p>
+                    {% endif %}
+
+                    {% if project.live_url %}
+                    <h2 class="sidebar-label mt-4">Live at</h2>
+                    <a href="{{ project.live_url }}" target="_blank" rel="noopener noreferrer"
+                        class="small text-break">{{ project.live_url | replace('https://', '') | replace('http://', '') }}</a>
+                    {% endif %}
+
+                </div>
+            </div>
+
+        </aside>
 
     </div>
 
@@ -97,17 +135,20 @@
 {% block scripts %}
 {% if images | length > 1 %}
 <script>
-    // Bootstrap only syncs indicators inside the carousel, so keep the thumbnails in step manually
+    // Bootstrap only syncs indicators inside the carousel, so keep the thumbnails and counter in step manually
     document.getElementById("projectCarousel").addEventListener("slide.bs.carousel", function (event) {
         document.querySelectorAll(".gallery-thumbs button").forEach(function (thumb, index) {
             var active = index === event.to;
             thumb.classList.toggle("active", active);
             if (active) {
                 thumb.setAttribute("aria-current", "true");
+                thumb.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
             } else {
                 thumb.removeAttribute("aria-current");
             }
         });
+        document.getElementById("carouselCounter").textContent =
+            (event.to + 1) + " / {{ images | length }}";
     });
 </script>
 {% endif %}

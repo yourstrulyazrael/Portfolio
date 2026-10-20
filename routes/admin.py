@@ -62,6 +62,32 @@ def get_technology_options(assigned_ids=()):
     return options
 
 
+def read_url(field):
+    """A URL from the form, or None if left blank. Returns False if it isn't an http(s) link,
+    so values like javascript: never end up in an href."""
+    value = request.form.get(field, "").strip()
+    if not value:
+        return None
+    return value if value.lower().startswith(("http://", "https://")) else False
+
+
+def read_project_form():
+    """The project's text fields, or None (after flashing why) if a link is invalid."""
+    github_url = read_url("github_url")
+    live_url = read_url("live_url")
+
+    if github_url is False or live_url is False:
+        flash("Links must start with http:// or https://", "danger")
+        return None
+
+    return {
+        "title": request.form["title"],
+        "description": request.form["description"],
+        "github_url": github_url,
+        "live_url": live_url,
+    }
+
+
 def read_technology_ids():
     return [int(technology_id) for technology_id in request.form.getlist("technologies")]
 
@@ -103,19 +129,18 @@ def add_project():
     technologies = get_technology_options()
 
     if request.method == "POST":
-        title = request.form["title"]
-        description = request.form["description"]
-        github_url = request.form["github_url"] or None
+        fields = read_project_form()
         technology_ids = read_technology_ids()
         images = get_uploaded_images("images")
+
+        if fields is None:
+            return redirect(url_for("admin.add_project"))
 
         if images is None:
             flash("Invalid image type. Use PNG, JPG, JPEG or WEBP.", "danger")
             return redirect(url_for("admin.add_project"))
 
-        project = supabase.table("projects").insert(
-            {"title": title, "description": description, "github_url": github_url}
-        ).execute().data[0]
+        project = supabase.table("projects").insert(fields).execute().data[0]
 
         set_project_technologies(project["id"], technology_ids)
         add_project_images(project["id"], images)
@@ -143,21 +168,20 @@ def edit_project(project_id):
     images = project["images"]
 
     if request.method == "POST":
-        title = request.form["title"]
-        description = request.form["description"]
-        github_url = request.form["github_url"] or None
+        fields = read_project_form()
         technology_ids = read_technology_ids()
         new_images = get_uploaded_images("images")
         remove_ids = {int(image_id) for image_id in request.form.getlist("remove_images")}
         cover_id = request.form.get("cover_image", type=int)
 
+        if fields is None:
+            return redirect(url_for("admin.edit_project", project_id = project_id))
+
         if new_images is None:
             flash("Invalid image type. Use PNG, JPG, JPEG or WEBP.", "danger")
             return redirect(url_for("admin.edit_project", project_id = project_id))
 
-        supabase.table("projects").update(
-            {"title": title, "description": description, "github_url": github_url}
-        ).eq("id", project_id).execute()
+        supabase.table("projects").update(fields).eq("id", project_id).execute()
 
         set_project_technologies(project_id, technology_ids)
 
@@ -209,11 +233,18 @@ def delete_project(project_id):
 
 
 def read_certificate_form():
+    """The certificate's text fields, or None (after flashing why) if the link is invalid."""
+    credential_url = read_url("credential_url")
+
+    if credential_url is False:
+        flash("The credential URL must start with http:// or https://", "danger")
+        return None
+
     return {
         "title": request.form["title"],
         "issuer": request.form["issuer"],
         "issue_date": request.form.get("issue_date") or None,
-        "credential_url": request.form.get("credential_url") or None,
+        "credential_url": credential_url,
         "description": request.form.get("description") or None,
     }
 
@@ -229,8 +260,12 @@ def add_certificate():
         return redirect(url_for("auth.login"))
 
     if request.method == "POST":
+        fields = read_certificate_form()
         file = request.files.get("file")
         filename = None
+
+        if fields is None:
+            return redirect(url_for("admin.add_certificate"))
 
         if file and file.filename:
             if not allowed_file(file.filename, CERTIFICATE_EXTENSIONS):
@@ -238,7 +273,7 @@ def add_certificate():
                 return redirect(url_for("admin.add_certificate"))
             filename = save_upload(file, CERTIFICATE_FOLDER)
 
-        supabase.table("certificates").insert({**read_certificate_form(), "file": filename}).execute()
+        supabase.table("certificates").insert({**fields, "file": filename}).execute()
 
         flash("Certificate added successfully!", "success")
         return redirect(url_for("admin.dashboard"))
@@ -256,8 +291,12 @@ def edit_certificate(certificate_id):
         abort(404)
 
     if request.method == "POST":
+        fields = read_certificate_form()
         file = request.files.get("file")
         filename = certificate["file"]
+
+        if fields is None:
+            return redirect(url_for("admin.edit_certificate", certificate_id = certificate_id))
 
         if file and file.filename:
             if not allowed_file(file.filename, CERTIFICATE_EXTENSIONS):
@@ -270,7 +309,7 @@ def edit_certificate(certificate_id):
             filename = None
 
         supabase.table("certificates").update(
-            {**read_certificate_form(), "file": filename}
+            {**fields, "file": filename}
         ).eq("id", certificate_id).execute()
 
         flash("Certificate updated successfully!", "success")

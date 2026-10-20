@@ -6,12 +6,13 @@
 
 <div class="container py-5">
 
-    <div class="text-center mb-4">
-        <h1 class="fw-bold mb-1">Contact Me</h1>
-        <p class="text-muted">
+    <header class="page-header text-center pt-0">
+        <p class="eyebrow">Say hello</p>
+        <h1 class="fw-bold mb-2">Contact Me</h1>
+        <p class="text-muted mb-0">
             Have a question or want to get in touch? Send me a message below.
         </p>
-    </div>
+    </header>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -62,7 +63,7 @@
                                 placeholder="Write your message..." required></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn btn-primary w-100" data-loading-text="Sending...">
                             Send Message
                         </button>
 

@@ -5,7 +5,9 @@ PROJECT_IMAGE_FOLDER = "projects"
 CERTIFICATE_FOLDER = "certificates"
 
 # PostgREST embeds technologies through the project_technologies junction table
-PROJECT_SELECT = "id, title, description, github_url, technologies(id, name), project_images(id, filename, sort_order)"
+PROJECT_SELECT = "*, technologies(id, name), project_images(id, filename, sort_order)"
+
+PROFICIENCY_LEVELS = {"beginner": 1, "intermediate": 2, "advanced": 3, "expert": 4}
 
 
 def media_url(folder, filename):
@@ -26,9 +28,21 @@ def shape_project(row):
     return row
 
 
-def list_projects():
-    rows = supabase.table("projects").select(PROJECT_SELECT).order("id").execute().data
-    return [shape_project(row) for row in rows]
+def list_projects(limit=None, newest_first=False):
+    query = supabase.table("projects").select(PROJECT_SELECT).order("id", desc=newest_first)
+    if limit:
+        query = query.limit(limit)
+    return [shape_project(row) for row in query.execute().data]
+
+
+def list_skills_by_category():
+    """Skills grouped as [(category, [skill, ...]), ...], each skill with a 1-4 proficiency level."""
+    skills = supabase.table("skills").select("*").order("category").order("name").execute().data
+    groups = {}
+    for skill in skills:
+        skill["level"] = PROFICIENCY_LEVELS.get(skill["proficiency"].strip().lower())
+        groups.setdefault(skill["category"], []).append(skill)
+    return list(groups.items())
 
 
 def get_project(project_id):

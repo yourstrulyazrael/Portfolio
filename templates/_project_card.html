@@ -1,0 +1,70 @@
+{# One project card. Expects `project` (from list_projects / get_project). #}
+{% from "_icons.html" import icon %}
+
+<article class="card project-card h-100">
+
+    <a href="{{ url_for('public.project_detail', project_id=project.id) }}" class="project-card-media"
+        tabindex="-1" aria-hidden="true">
+        {% if project.cover_image %}
+        <div class="skeleton-media">
+            <img src="{{ media_url('projects', project.cover_image) }}" alt="" decoding="async"
+                data-skeleton>
+        </div>
+        {% else %}
+        <div class="project-card-placeholder">{{ icon('image') }}</div>
+        {% endif %}
+
+        {% if project.live_url %}
+        <span class="live-badge"><span class="live-dot"></span>Live</span>
+        {% endif %}
+
+        {% if project.image_count > 1 %}
+        <span class="image-count-badge">{{ icon('image') }} {{ project.image_count }}</span>
+        {% endif %}
+    </a>
+
+    <div class="card-body d-flex flex-column">
+
+        <h2 class="card-title h5 fw-bold mb-2">
+            <a href="{{ url_for('public.project_detail', project_id=project.id) }}" class="stretched-title">
+                {{ project.title }}
+            </a>
+        </h2>
+
+        <p class="card-text text-muted project-card-description">
+            {{ project.description }}
+        </p>
+
+        {% if project.technology_list %}
+        <div class="d-flex flex-wrap gap-1 mb-3">
+            {% for technology in project.technology_list %}
+            <span class="badge bg-primary">{{ technology.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="mt-auto d-flex flex-wrap gap-2">
+
+            <a href="{{ url_for('public.project_detail', project_id=project.id) }}" class="btn btn-primary btn-sm">
+                View Details
+            </a>
+
+            {% if project.live_url %}
+            <a href="{{ project.live_url }}" target="_blank" rel="noopener noreferrer"
+                class="btn btn-outline-primary btn-sm btn-icon">
+                {{ icon('external') }} Live Demo
+            </a>
+            {% endif %}
+
+            {% if project.github_url %}
+            <a href="{{ project.github_url }}" target="_blank" rel="noopener noreferrer"
+                class="btn btn-outline-secondary btn-sm btn-icon">
+                {{ icon('github') }} Code
+            </a>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</article>

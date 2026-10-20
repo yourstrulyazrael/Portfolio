@@ -1,12 +1,14 @@
 from flask import Blueprint, render_template, abort, request, flash, redirect, url_for
 from database import supabase
-from routes.common import list_projects, get_project, list_certificates
+from routes.common import list_projects, get_project, list_certificates, list_skills_by_category
 
 public = Blueprint('public', __name__)
 
 @public.route('/')
 def home():
-    return render_template("index.html")
+    featured_projects = list_projects(limit=2, newest_first=True)
+    skill_groups = list_skills_by_category()
+    return render_template("index.html", featured_projects = featured_projects, skill_groups = skill_groups)
 
 @public.route('/projects')
 def project_page():
@@ -15,8 +17,8 @@ def project_page():
 
 @public.route('/skills')
 def skills_page():
-    skills = supabase.table("skills").select("*").order("id").execute().data
-    return render_template("skills.html", skills = skills)
+    skill_groups = list_skills_by_category()
+    return render_template("skills.html", skill_groups = skill_groups)
 
 @public.route('/projects/<int:project_id>')
 def project_detail(project_id):

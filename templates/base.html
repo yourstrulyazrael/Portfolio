@@ -628,6 +628,496 @@
             transform: translateX(-3px);
         }
 
+        /* ---------- Page layout ---------- */
+
+        .page-header {
+            padding: 4px 0 32px;
+        }
+
+        .eyebrow {
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--violet-soft);
+        }
+
+        .text-soft {
+            color: var(--text-soft);
+        }
+
+        main>.container,
+        main>div>.container {
+            animation: fadeUp 0.45s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .empty-state {
+            padding: 48px 24px;
+            text-align: center;
+            border: 1px dashed var(--border-strong);
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .icon {
+            width: 1em;
+            height: 1em;
+            flex-shrink: 0;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45em;
+        }
+
+        /* ---------- Skeletons ---------- */
+
+        .skeleton,
+        .skeleton-media {
+            position: relative;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .skeleton {
+            border-radius: 8px;
+        }
+
+        .skeleton::after,
+        .skeleton-media::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(167, 139, 250, 0.10) 40%,
+                    rgba(255, 255, 255, 0.08) 50%,
+                    rgba(167, 139, 250, 0.10) 60%,
+                    transparent 100%);
+            animation: shimmer 1.4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            to {
+                transform: translateX(100%);
+            }
+        }
+
+        .skeleton-media img {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .skeleton-media.is-loaded {
+            background-color: transparent;
+        }
+
+        .skeleton-media.is-loaded::after {
+            display: none;
+        }
+
+        .skeleton-media.is-loaded img {
+            opacity: 1;
+        }
+
+        .skeleton-media.is-broken {
+            background:
+                radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.25), transparent 60%),
+                rgba(2, 4, 12, 0.5);
+        }
+
+        .modal-image-frame {
+            min-height: 240px;
+        }
+
+        .modal-image-frame.is-loaded {
+            min-height: 0;
+        }
+
+        /* Shown in place of the page while the next one loads */
+        .page-skeleton {
+            display: none;
+        }
+
+        body.is-navigating main {
+            display: none;
+        }
+
+        body.is-navigating .page-skeleton {
+            display: block;
+        }
+
+        .page-skeleton .sk-layout {
+            display: none;
+        }
+
+        body[data-skeleton="grid"] .sk-grid,
+        body[data-skeleton="detail"] .sk-detail,
+        body[data-skeleton="form"] .sk-form {
+            display: flex;
+        }
+
+        .sk-back {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            margin: 28px 0 20px;
+        }
+
+        .sk-eyebrow {
+            width: 90px;
+            height: 12px;
+            margin-bottom: 12px;
+        }
+
+        .sk-title {
+            width: min(320px, 70%);
+            height: 38px;
+            margin-bottom: 14px;
+        }
+
+        .sk-line {
+            height: 12px;
+            margin-bottom: 10px;
+        }
+
+        .sk-media {
+            aspect-ratio: 16 / 10;
+            border-radius: 0;
+        }
+
+        .sk-pill {
+            display: inline-block;
+            width: 64px;
+            height: 22px;
+            border-radius: 999px;
+            margin-right: 6px;
+        }
+
+        .sk-button {
+            height: 38px;
+            border-radius: 12px;
+        }
+
+        #navProgress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 2000;
+            height: 3px;
+            width: 0;
+            background: var(--gradient);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+            opacity: 0;
+            transition: width 8s cubic-bezier(0.1, 0.7, 0.2, 1), opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        #navProgress.is-active {
+            width: 85%;
+            opacity: 1;
+        }
+
+        .btn-spinner {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            margin-right: 0.5em;
+            vertical-align: -0.125em;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ---------- Project cards ---------- */
+
+        .project-card {
+            overflow: hidden;
+        }
+
+        .project-card-media {
+            position: relative;
+            display: block;
+            aspect-ratio: 16 / 10;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .project-card-media .skeleton-media {
+            width: 100%;
+            height: 100%;
+        }
+
+        .project-card-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.4s ease, transform 0.5s ease;
+        }
+
+        .project-card:hover .project-card-media img {
+            transform: scale(1.04);
+        }
+
+        .project-card-placeholder {
+            display: grid;
+            place-items: center;
+            width: 100%;
+            height: 100%;
+            color: var(--violet-soft);
+            background:
+                radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.3), transparent 60%),
+                radial-gradient(circle at 80% 90%, rgba(37, 99, 235, 0.25), transparent 60%),
+                rgba(2, 4, 12, 0.5);
+        }
+
+        .project-card-placeholder .icon {
+            width: 40px;
+            height: 40px;
+            opacity: 0.7;
+        }
+
+        .live-badge,
+        .image-count-badge {
+            position: absolute;
+            top: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: rgba(5, 8, 22, 0.75);
+            border: 1px solid var(--border-strong);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        .live-badge {
+            left: 12px;
+            color: #bbf7d0;
+            letter-spacing: 0.04em;
+        }
+
+        .image-count-badge {
+            right: 12px;
+            color: var(--text-soft);
+        }
+
+        .live-dot {
+            position: relative;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            flex-shrink: 0;
+        }
+
+        .live-dot::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 1.8s ease-out infinite;
+        }
+
+        @keyframes pulse {
+            to {
+                transform: scale(2.6);
+                opacity: 0;
+            }
+        }
+
+        .stretched-title {
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .stretched-title:hover {
+            color: var(--violet-pale);
+        }
+
+        .project-card-description {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .project-description {
+            white-space: pre-line;
+            line-height: 1.75;
+        }
+
+        .project-sidebar {
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar-label {
+            margin-bottom: 10px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: inherit;
+        }
+
+        /* ---------- Skills ---------- */
+
+        .skill-section+.skill-section {
+            margin-top: 40px;
+        }
+
+        .skill-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .skill-section-title span {
+            padding: 1px 9px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-family: "Inter", sans-serif;
+            color: var(--violet-pale);
+            background: rgba(139, 92, 246, 0.16);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .skill-level-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .skill-meter {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+
+        .skill-meter span {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .skill-meter span.is-filled {
+            background: var(--gradient);
+            box-shadow: 0 0 8px rgba(124, 58, 237, 0.45);
+        }
+
+        /* ---------- Home ---------- */
+
+        .hero {
+            min-height: 62vh;
+            padding: 24px 0 8px;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            background: rgba(139, 92, 246, 0.1);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--violet-pale);
+        }
+
+        .hero-title {
+            line-height: 1.08;
+        }
+
+        .hero-lead {
+            max-width: 680px;
+        }
+
+        .home-section {
+            margin-top: 88px;
+        }
+
+        .section-heading {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .section-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .section-link .icon {
+            transition: transform 0.2s ease;
+        }
+
+        .section-link:hover .icon {
+            transform: translateX(3px);
+        }
+
+        .cta-panel {
+            position: relative;
+            overflow: hidden;
+            padding: 56px 24px;
+            border-radius: 24px;
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            background:
+                radial-gradient(circle at 15% 0%, rgba(124, 58, 237, 0.45), transparent 55%),
+                radial-gradient(circle at 85% 100%, rgba(37, 99, 235, 0.4), transparent 55%),
+                rgba(15, 23, 42, 0.75);
+        }
+
+        .btn-light {
+            color: #1e1b4b;
+            font-weight: 600;
+        }
+
+        .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
         /* ---------- Technology picker ---------- */
 
         .tech-group+.tech-group {
@@ -708,7 +1198,25 @@
         }
 
         .project-gallery {
-            padding: 12px 12px 0;
+            padding: 12px;
+        }
+
+        .project-gallery .carousel-item .skeleton-media {
+            aspect-ratio: 16 / 9;
+        }
+
+        .carousel-counter {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(5, 8, 22, 0.75);
+            border: 1px solid var(--border-strong);
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-soft);
+            pointer-events: none;
         }
 
         .project-gallery .carousel-inner {
@@ -717,7 +1225,8 @@
         }
 
         .project-gallery .carousel-item img {
-            aspect-ratio: 16 / 9;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
         }
 
@@ -766,7 +1275,9 @@
             border-color: var(--violet-light);
         }
 
+        .gallery-thumbs .skeleton-media,
         .gallery-thumbs img {
+            display: block;
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -947,7 +1458,11 @@
         @media (prefers-reduced-motion: reduce) {
 
             body,
-            body::before {
+            body::before,
+            main>.container,
+            .skeleton::after,
+            .skeleton-media::after,
+            .live-dot::after {
                 animation: none;
             }
 
@@ -1044,10 +1559,69 @@
         </nav>
     </header>
 
+    <div id="navProgress"></div>
+
     <main>
         {% block content %}
         {% endblock %}
     </main>
+
+    {# Placeholder page shown while the next page loads (see the navigation script below) #}
+    <div class="page-skeleton" aria-hidden="true">
+        <div class="container">
+
+            <div class="skeleton sk-back"></div>
+            <div class="skeleton sk-eyebrow"></div>
+            <div class="skeleton sk-title"></div>
+            <div class="skeleton sk-line mb-5" style="width: min(420px, 85%);"></div>
+
+            <div class="sk-layout sk-grid row g-4">
+                {% for _ in range(3) %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 overflow-hidden">
+                        <div class="skeleton sk-media"></div>
+                        <div class="card-body">
+                            <div class="skeleton sk-line" style="width: 60%; height: 18px;"></div>
+                            <div class="skeleton sk-line"></div>
+                            <div class="skeleton sk-line" style="width: 80%;"></div>
+                            <div class="mt-3"><span class="skeleton sk-pill"></span><span
+                                    class="skeleton sk-pill"></span></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="sk-layout sk-detail row g-4">
+                <div class="col-lg-8">
+                    <div class="card p-3">
+                        <div class="skeleton" style="aspect-ratio: 16 / 9;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card p-4">
+                        <div class="skeleton sk-button mb-2"></div>
+                        <div class="skeleton sk-button mb-4"></div>
+                        <div class="skeleton sk-line" style="width: 40%;"></div>
+                        <div><span class="skeleton sk-pill"></span><span class="skeleton sk-pill"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sk-layout sk-form row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card p-4">
+                        {% for _ in range(3) %}
+                        <div class="skeleton sk-line" style="width: 25%;"></div>
+                        <div class="skeleton sk-button mb-4"></div>
+                        {% endfor %}
+                        <div class="skeleton sk-button"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     <footer class="site-footer">
         <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
@@ -1071,6 +1645,108 @@
             }
             window.addEventListener("scroll", onScroll, { passive: true });
             onScroll();
+        })();
+
+        // Fade images in over their shimmer placeholder once they've loaded
+        document.querySelectorAll("img[data-skeleton]").forEach(function (img) {
+            var frame = img.closest(".skeleton-media");
+            if (!frame) return;
+
+            function done() {
+                frame.classList.add("is-loaded");
+                if (!img.naturalWidth) frame.classList.add("is-broken");
+            }
+
+            if (img.complete) {
+                done();
+            } else {
+                img.addEventListener("load", done, { once: true });
+                img.addEventListener("error", done, { once: true });
+            }
+        });
+
+        // Page skeleton + progress bar while the next page loads. Pages render on the
+        // server, so a slow response (e.g. a cold start) would otherwise look frozen.
+        (function () {
+            var progress = document.getElementById("navProgress");
+            var timer = null;
+
+            function skeletonFor(url) {
+                if (/^\/projects\/\d+/.test(url.pathname)) return "detail";
+                if (/^\/(contact|login)|\/(add|edit)-/.test(url.pathname)) return "form";
+                return "grid";
+            }
+
+            function start(url) {
+                progress.classList.add("is-active");
+                clearTimeout(timer);
+                // Only swap in the skeleton if the page doesn't arrive almost immediately
+                timer = setTimeout(function () {
+                    document.body.dataset.skeleton = skeletonFor(url);
+                    document.body.classList.add("is-navigating");
+                    window.scrollTo(0, 0);
+                }, 150);
+            }
+
+            function reset() {
+                clearTimeout(timer);
+                document.body.classList.remove("is-navigating");
+                progress.classList.remove("is-active");
+                document.querySelectorAll("[data-original-html]").forEach(function (button) {
+                    button.innerHTML = button.dataset.originalHtml;
+                    button.removeAttribute("data-original-html");
+                    button.disabled = false;
+                });
+            }
+
+            document.addEventListener("click", function (event) {
+                if (event.defaultPrevented || event.button !== 0 ||
+                    event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+                var link = event.target.closest("a[href]");
+                if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
+
+                var url = new URL(link.href, location.href);
+                if (url.origin !== location.origin) return;
+                if (url.pathname === location.pathname && url.search === location.search) return;
+
+                start(url);
+            });
+
+            document.addEventListener("submit", function (event) {
+                if (event.defaultPrevented) return;  // e.g. a cancelled "Are you sure?" confirm
+
+                var form = event.target;
+                var button = event.submitter || form.querySelector("[type=submit]");
+
+                if (form.method.toLowerCase() === "get") {
+                    start(new URL(form.action, location.href));
+                    return;
+                }
+
+                progress.classList.add("is-active");
+
+                if (button && !button.classList.contains("search-submit")) {
+                    var label = button.dataset.loadingText;
+                    if (!label) {
+                        var hasFiles = Array.from(form.querySelectorAll("input[type=file]"))
+                            .some(function (input) { return input.files.length > 0; });
+                        var text = button.textContent.trim().toLowerCase();
+                        label = hasFiles ? "Uploading..." :
+                            text.startsWith("delete") ? "Deleting..." :
+                                text.startsWith("login") || text.startsWith("sign in") ? "Signing in..." : "Saving...";
+                    }
+                    button.dataset.originalHtml = button.innerHTML;
+                    button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>' + label;
+                    // Disable after the submit has gone out, so the button's own name/value is still sent
+                    setTimeout(function () { button.disabled = true; }, 0);
+                }
+            });
+
+            // Coming back with the browser's Back button can restore this page from cache mid-load
+            window.addEventListener("pageshow", function (event) {
+                if (event.persisted) reset();
+            });
         })();
 
         // Thumbnail previews for any <input type="file" data-preview="elementId">

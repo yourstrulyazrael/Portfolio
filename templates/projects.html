@@ -8,66 +8,32 @@
 
     <a href="/" class="back-link">←</a>
 
-    <div class="mb-4">
-        <h1 class="fw-bold mb-1">Projects</h1>
-        <p class="text-muted">Here are some of my projects.</p>
-    </div>
+    <header class="page-header">
+        <p class="eyebrow">Portfolio</p>
+        <h1 class="fw-bold mb-2">Projects</h1>
+        <p class="text-muted mb-0">
+            {{ projects | length }} project{{ '' if projects | length == 1 else 's' }} I've designed and built.
+        </p>
+    </header>
+
+    {% if projects %}
 
     <div class="row g-4">
-
         {% for project in projects %}
-
-        <div class="col-md-6">
-
-            <div class="card shadow-sm border-0 h-100">
-
-                {% if project.cover_image %}
-                <img src="{{ media_url('projects', project.cover_image) }}"
-                    class="card-img-top project-cover" alt="{{ project.title }}">
-                {% endif %}
-
-                <div class="card-body d-flex flex-column">
-
-                    <h2 class="card-title h4 fw-bold">
-                        {{ project.title }}
-                    </h2>
-
-                    <p class="card-text text-muted">
-                        {{ project.description }}
-                    </p>
-
-                    <p class="card-text">
-                        <strong>Technologies:</strong>
-                        {% if project.technologies %}
-                        {% for technology in project.technologies.split(', ') %}
-                        <span class="badge bg-primary me-1">
-                            {{ technology }}
-                        </span>
-                        {% endfor %}
-                        {% else %}
-                        <span class="text-muted">None</span>
-                        {% endif %}
-                    </p>
-
-
-
-                    <div class="mt-auto pt-3">
-
-                        <a href="{{ url_for('public.project_detail', project_id=project.id) }}" class="btn btn-primary">
-                            View Project
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+        <div class="col-md-6 col-lg-4">
+            {% include "_project_card.html" %}
         </div>
-
         {% endfor %}
-
     </div>
+
+    {% else %}
+
+    <div class="empty-state">
+        <h2 class="h5 fw-bold">No projects yet</h2>
+        <p class="text-muted mb-0">Projects will show up here once they're added.</p>
+    </div>
+
+    {% endif %}
 
 </div>
 

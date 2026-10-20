@@ -8,12 +8,13 @@
 
     <a href="/" class="back-link">←</a>
 
-    <div class="mb-4">
-        <h1 class="fw-bold mb-1">Certificates</h1>
-        <p class="text-muted">
+    <header class="page-header">
+        <p class="eyebrow">Achievements</p>
+        <h1 class="fw-bold mb-2">Certificates</h1>
+        <p class="text-muted mb-0">
             Courses, certifications and achievements I've earned along the way.
         </p>
-    </div>
+    </header>
 
     {% if certificates %}
 
@@ -29,10 +30,11 @@
             <div class="card shadow-sm border-0 h-100 certificate-card">
 
                 {% if file_url and not is_pdf %}
-                <button type="button" class="certificate-preview" data-bs-toggle="modal"
+                <button type="button" class="certificate-preview skeleton-media" data-bs-toggle="modal"
                     data-bs-target="#certificateModal" data-image="{{ file_url }}"
                     data-title="{{ certificate.title }}" aria-label="View {{ certificate.title }}">
-                    <img src="{{ file_url }}" alt="{{ certificate.title }}">
+                    <img src="{{ file_url }}" alt="{{ certificate.title }}" loading="lazy" decoding="async"
+                        data-skeleton>
                 </button>
                 {% else %}
                 <div class="certificate-preview certificate-placeholder">
@@ -112,7 +114,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-2">
-                <img src="" alt="" class="img-fluid w-100 rounded" id="certificateModalImage">
+                <div class="skeleton-media rounded modal-image-frame" id="certificateModalFrame">
+                    <img src="" alt="" class="img-fluid w-100 rounded" id="certificateModalImage">
+                </div>
             </div>
         </div>
     </div>
@@ -125,7 +129,12 @@
     document.getElementById("certificateModal").addEventListener("show.bs.modal", function (event) {
         var trigger = event.relatedTarget;
         var image = document.getElementById("certificateModalImage");
-        image.src = trigger.dataset.image;
+        var frame = document.getElementById("certificateModalFrame");
+        if (image.getAttribute("src") !== trigger.dataset.image) {
+            frame.classList.remove("is-loaded");
+            image.onload = image.onerror = function () { frame.classList.add("is-loaded"); };
+            image.src = trigger.dataset.image;
+        }
         image.alt = trigger.dataset.title;
         document.getElementById("certificateModalTitle").textContent = trigger.dataset.title;
     });
