@@ -5,8 +5,9 @@ from config import SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_BUCKET
 
 if not SUPABASE_URL or not SUPABASE_SECRET_KEY:
     raise RuntimeError(
-        "SUPABASE_URL and SUPABASE_SECRET_KEY must be set in .env "
-        "(Supabase dashboard -> Project Settings -> API Keys)."
+        "SUPABASE_URL and SUPABASE_SECRET_KEY must be set: in .env locally, or in the "
+        "host's environment variables when deployed (e.g. Vercel -> Settings -> "
+        "Environment Variables). Values are in Supabase -> Project Settings -> API Keys."
     )
 
 supabase = create_client(SUPABASE_URL, SUPABASE_SECRET_KEY)
