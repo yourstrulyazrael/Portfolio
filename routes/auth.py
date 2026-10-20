@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, session, flash, redirect, url_for
-from database import db
+from database import supabase, first
 from werkzeug.security import check_password_hash
 
 auth = Blueprint('auth', __name__)
@@ -12,11 +12,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-
-        user = cursor.fetchone()
-        cursor.close()
+        user = first(supabase.table("users").select("*").eq("username", username).limit(1).execute())
 
         if user and check_password_hash(user["password"], password):
             session["user_id"] = user["id"]

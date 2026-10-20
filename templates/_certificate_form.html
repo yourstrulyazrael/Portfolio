@@ -1,0 +1,64 @@
+{# Shared fields for add_certificate.html and edit_certificate.html. `certificate` is None when adding. #}
+
+<div class="row g-3">
+
+    <div class="col-md-7">
+        <label for="title" class="form-label fw-semibold">Title</label>
+        <input type="text" class="form-control" id="title" name="title" maxlength="150"
+            value="{{ certificate.title if certificate else '' }}" placeholder="e.g. Python Essentials 1" required>
+    </div>
+
+    <div class="col-md-5">
+        <label for="issuer" class="form-label fw-semibold">Issuer</label>
+        <input type="text" class="form-control" id="issuer" name="issuer" maxlength="150"
+            value="{{ certificate.issuer if certificate else '' }}" placeholder="e.g. Cisco Networking Academy"
+            required>
+    </div>
+
+    <div class="col-md-5">
+        <label for="issue_date" class="form-label fw-semibold">Issue Date</label>
+        <input type="date" class="form-control" id="issue_date" name="issue_date"
+            value="{{ certificate.issue_date.isoformat() if certificate and certificate.issue_date else '' }}">
+    </div>
+
+    <div class="col-md-7">
+        <label for="credential_url" class="form-label fw-semibold">Credential URL</label>
+        <input type="url" class="form-control" id="credential_url" name="credential_url" maxlength="255"
+            value="{{ certificate.credential_url or '' if certificate else '' }}"
+            placeholder="https://www.credly.com/badges/...">
+    </div>
+
+    <div class="col-12">
+        <label for="description" class="form-label fw-semibold">Description</label>
+        <textarea class="form-control" id="description" name="description" rows="3"
+            placeholder="What did you learn?">{{ certificate.description or '' if certificate else '' }}</textarea>
+    </div>
+
+    <div class="col-12">
+        <label for="file" class="form-label fw-semibold">
+            {{ 'Replace Certificate File' if certificate and certificate.file else 'Certificate File' }}
+        </label>
+        <input type="file" class="form-control" id="file" name="file" accept=".png,.jpg,.jpeg,.webp,.pdf"
+            data-preview="filePreview">
+        <div class="form-text">An image or PDF of the certificate.</div>
+        <div class="upload-preview" id="filePreview"></div>
+
+        {% if certificate and certificate.file %}
+        <div class="d-flex align-items-center gap-3 mt-3">
+            {% if certificate.file.lower().endswith('.pdf') %}
+            <a href="{{ media_url('certificates', certificate.file) }}" target="_blank"
+                rel="noopener" class="btn btn-outline-secondary btn-sm">Current PDF</a>
+            {% else %}
+            <img src="{{ media_url('certificates', certificate.file) }}"
+                alt="Current certificate" class="rounded" style="height: 72px;">
+            {% endif %}
+
+            <div class="form-check mb-0">
+                <input class="form-check-input" type="checkbox" name="remove_file" value="1" id="remove_file">
+                <label class="form-check-label" for="remove_file">Remove current file</label>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>

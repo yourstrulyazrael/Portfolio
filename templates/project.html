@@ -9,9 +9,49 @@
 
     <div class="card shadow-sm border-0">
 
-        {% if project.image %}
-        <img src="{{ url_for('static', filename='images/projects/' + project.image) }}" class="img-fluid rounded mb-4"
-            alt="{{ project.title }}">
+        {% if images %}
+        <div class="project-gallery">
+
+            <div id="projectCarousel" class="carousel slide" data-bs-ride="false">
+
+                <div class="carousel-inner">
+                    {% for image in images %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <img src="{{ media_url('projects', image.filename) }}"
+                            class="d-block w-100" alt="{{ project.title }} image {{ loop.index }}">
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if images | length > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#projectCarousel"
+                    data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+
+                <button class="carousel-control-next" type="button" data-bs-target="#projectCarousel"
+                    data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                {% endif %}
+
+            </div>
+
+            {% if images | length > 1 %}
+            <div class="gallery-thumbs">
+                {% for image in images %}
+                <button type="button" data-bs-target="#projectCarousel" data-bs-slide-to="{{ loop.index0 }}"
+                    class="{% if loop.first %}active{% endif %}" aria-label="Show image {{ loop.index }}"
+                    {% if loop.first %}aria-current="true" {% endif %}>
+                    <img src="{{ media_url('projects', image.filename) }}" alt="">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
         {% endif %}
 
         <div class="card-body p-4">
@@ -52,4 +92,23 @@
 
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+{% if images | length > 1 %}
+<script>
+    // Bootstrap only syncs indicators inside the carousel, so keep the thumbnails in step manually
+    document.getElementById("projectCarousel").addEventListener("slide.bs.carousel", function (event) {
+        document.querySelectorAll(".gallery-thumbs button").forEach(function (thumb, index) {
+            var active = index === event.to;
+            thumb.classList.toggle("active", active);
+            if (active) {
+                thumb.setAttribute("aria-current", "true");
+            } else {
+                thumb.removeAttribute("aria-current");
+            }
+        });
+    });
+</script>
+{% endif %}
 {% endblock %}

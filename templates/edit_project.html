@@ -60,27 +60,11 @@
 
                 </div>
 
-                <div class="mb-4">
+                {% with selected_ids = assigned_technologies | map(attribute='technology_id') | list %}
+                {% include "_technology_picker.html" %}
+                {% endwith %}
 
-                    <label class="form-label fw-semibold">
-                        Technologies
-                    </label>
-
-                    {% for technology in technologies %}
-
-                    <div class="form-check">
-
-                        <input class="form-check-input" type="checkbox" name="technologies" value="{{ technology.id }}"
-                            id="technology{{ technology.id }}" {% if technology.id in assigned_technologies |
-                            map(attribute='technology_id' ) | list %} checked {% endif %}>
-
-                        <label class="form-check-label" for="technology{{ technology.id }}">
-                            {{ technology.name }}
-                        </label>
-
-                    </div>
-
-                    {% endfor %}
+                <div>
 
                     <div class="mb-3">
                         <label for="github_url" class="form-label fw-semibold">
@@ -91,12 +75,53 @@
                             value="{{ project.github_url or '' }}" placeholder="https://github.com/username/repository">
                     </div>
 
+                    {% if images %}
                     <div class="mb-3">
-                        <label for="image" class="form-label fw-semibold">
-                            Replace Project Image
+                        <label class="form-label fw-semibold">
+                            Current Images
                         </label>
 
-                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <div class="form-text mb-2">
+                            Pick the cover image, or tick "Remove" to delete an image when you save.
+                        </div>
+
+                        <div class="image-manager">
+                            {% for image in images %}
+                            <div class="image-tile">
+                                <img src="{{ media_url('projects', image.filename) }}"
+                                    alt="Project image {{ loop.index }}">
+
+                                <div class="image-tile-actions">
+                                    <div class="form-check mb-0">
+                                        <input class="form-check-input" type="radio" name="cover_image"
+                                            value="{{ image.id }}" id="cover{{ image.id }}" {% if loop.first %}checked{%
+                                            endif %}>
+                                        <label class="form-check-label" for="cover{{ image.id }}">Cover</label>
+                                    </div>
+
+                                    <div class="form-check mb-0">
+                                        <input class="form-check-input" type="checkbox" name="remove_images"
+                                            value="{{ image.id }}" id="remove{{ image.id }}">
+                                        <label class="form-check-label" for="remove{{ image.id }}">Remove</label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="images" class="form-label fw-semibold">
+                            Add Images
+                        </label>
+
+                        <input type="file" class="form-control" id="images" name="images"
+                            accept=".png,.jpg,.jpeg,.webp" multiple data-preview="imagePreview">
+                        <div class="form-text">
+                            New images are added after the existing ones.
+                        </div>
+                        <div class="upload-preview" id="imagePreview"></div>
                     </div>
 
                 </div>

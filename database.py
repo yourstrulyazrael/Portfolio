@@ -1,9 +1,31 @@
-import mysql.connector
-from config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+from datetime import date, datetime
 
-db = mysql.connector.connect(
-    host=DB_HOST,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    database=DB_NAME
-)
+from supabase import create_client
+from config import SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_BUCKET
+
+if not SUPABASE_URL or not SUPABASE_SECRET_KEY:
+    raise RuntimeError(
+        "SUPABASE_URL and SUPABASE_SECRET_KEY must be set in .env "
+        "(Supabase dashboard -> Project Settings -> API Keys)."
+    )
+
+supabase = create_client(SUPABASE_URL, SUPABASE_SECRET_KEY)
+
+
+def bucket():
+    return supabase.storage.from_(SUPABASE_BUCKET)
+
+
+def first(response):
+    """The first row of a query response, or None when nothing matched."""
+    return response.data[0] if response.data else None
+
+
+def parse_date(value):
+    """Supabase returns dates as ISO strings; templates expect date objects."""
+    return date.fromisoformat(value) if value else None
+
+
+def parse_datetime(value):
+    """Parse a timestamptz string and convert it from UTC to the server's local time."""
+    return datetime.fromisoformat(value).astimezone() if value else None

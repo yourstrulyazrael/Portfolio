@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, abort, request, flash, redirect, url_for
-from database import db
+from database import supabase
+from routes.common import list_projects, get_project, list_certificates
 
 public = Blueprint('public', __name__)
 
@@ -9,57 +10,27 @@ def home():
 
 @public.route('/projects')
 def project_page():
-    cursor = db.cursor(dictionary=True)
-
-    cursor.execute("""
-        SELECT
-            projects.id,
-            projects.title,
-            projects.description,
-            GROUP_CONCAT(technologies.name SEPARATOR ', ') AS technologies
-        FROM projects
-        LEFT JOIN project_technologies
-            ON projects.id = project_technologies.project_id
-        LEFT JOIN technologies
-            ON project_technologies.technology_id = technologies.id
-        GROUP BY projects.id
-        """)
-    projects = cursor.fetchall()
-
-
-    cursor.close()
+    projects = list_projects()
     return render_template("projects.html", projects = projects)
 
 @public.route('/skills')
 def skills_page():
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM skills")
-    skills = cursor.fetchall()
-    cursor.close()
+    skills = supabase.table("skills").select("*").order("id").execute().data
     return render_template("skills.html", skills = skills)
 
 @public.route('/projects/<int:project_id>')
 def project_detail(project_id):
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM projects WHERE id = %s", (project_id,))
+    project = get_project(project_id)
 
-    project = cursor.fetchone();
-
-    cursor.execute("""
-        SELECT technologies.name
-        FROM project_technologies
-        JOIN technologies
-            ON project_technologies.technology_id = technologies.id
-        WHERE project_technologies.project_id = %s
-    """, (project_id,))
-
-    technologies = cursor.fetchall()
-
-    cursor.close()
     if project is None:
         abort(404)
 
-    return render_template("project.html", project = project, technologies = technologies)
+    return render_template("project.html", project = project, technologies = project["technology_list"], images = project["images"])
+
+@public.route('/certificates')
+def certificates_page():
+    certificates = list_certificates()
+    return render_template("certificates.html", certificates = certificates)
 
 @public.route('/contact', methods = ["GET", "POST"])
 def contact():
@@ -68,55 +39,27 @@ def contact():
         email = request.form["email"]
         message = request.form["message"]
 
-        cursor = db.cursor()
-        cursor.execute("INSERT INTO messages (name, email, message) VALUES (%s, %s, %s)", (name, email, message))
-        db.commit()
-        cursor.close()
+        supabase.table("messages").insert({"name": name, "email": email, "message": message}).execute()
 
         flash("Message sent successfully!", "success")
         return redirect(url_for("public.contact"))
 
     return render_template("contact.html")
 
-@public.route("/search") 
+@public.route("/search")
 def search():
 
-    query = request.args.get("q", "")
+    query = request.args.get("q", "").strip()
+    needle = query.lower()
 
-    cursor = db.cursor(dictionary=True) 
-
-    cursor.execute("""
-        SELECT
-            projects.id,
-            projects.title,
-            projects.description,
-            GROUP_CONCAT(DISTINCT technologies.name SEPARATOR ', ') AS technologies
-        FROM projects
-
-        LEFT JOIN project_technologies
-            ON projects.id = project_technologies.project_id
-
-        LEFT JOIN technologies
-            ON project_technologies.technology_id = technologies.id
-
-        WHERE projects.title LIKE %s
-           OR projects.description LIKE %s
-           OR technologies.name LIKE %s
-
-        GROUP BY
-            projects.id,
-            projects.title,
-            projects.description
-
-    """, (
-        f"%{query}%",
-        f"%{query}%",
-        f"%{query}%"
-    ))
-
-    projects = cursor.fetchall()
-
-    cursor.close()
+    # A portfolio has few projects, so match in Python rather than building a
+    # PostgREST OR filter across the embedded technologies from user input.
+    projects = [
+        project for project in list_projects()
+        if needle in project["title"].lower()
+        or needle in project["description"].lower()
+        or any(needle in technology["name"].lower() for technology in project["technology_list"])
+    ]
 
     return render_template(
         "search.html",

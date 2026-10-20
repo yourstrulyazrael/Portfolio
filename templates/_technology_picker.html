@@ -1,0 +1,40 @@
+{# Technology checkboxes for add_project.html and edit_project.html, grouped by skill category.
+   Expects `technologies` (from get_technology_options) and `selected_ids` (a list of technology ids). #}
+
+<div class="mb-4">
+
+    <div class="d-flex justify-content-between align-items-baseline mb-2">
+        <span class="form-label fw-semibold mb-0">Technologies</span>
+        <a href="{{ url_for('admin.add_skill') }}" class="small">+ Add a skill</a>
+    </div>
+
+    {% if technologies %}
+
+    <div class="form-text mt-0 mb-3">
+        These come from your skills. Add a skill to make a new technology available here.
+    </div>
+
+    {% for category, group in technologies | groupby('category') %}
+    <div class="tech-group">
+        <div class="tech-group-label">{{ category }}</div>
+
+        <div class="tech-chips">
+            {% for technology in group %}
+            <input class="tech-chip-input" type="checkbox" name="technologies" value="{{ technology.id }}"
+                id="technology{{ technology.id }}" {% if technology.id in selected_ids %}checked{% endif %}>
+            <label class="tech-chip" for="technology{{ technology.id }}">{{ technology.name }}</label>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+
+    <div class="tech-empty">
+        You don't have any skills yet. <a href="{{ url_for('admin.add_skill') }}">Add a skill</a>
+        and it will show up here as a technology you can tag.
+    </div>
+
+    {% endif %}
+
+</div>

@@ -60,26 +60,11 @@
 
                 </div>
 
-                <div class="mb-4">
+                {% with selected_ids = [] %}
+                {% include "_technology_picker.html" %}
+                {% endwith %}
 
-                    <label class="form-label fw-semibold">
-                        Technologies
-                    </label>
-
-                    {% for technology in technologies %}
-
-                    <div class="form-check">
-
-                        <input class="form-check-input" type="checkbox" name="technologies" value="{{ technology.id }}"
-                            id="technology{{ technology.id }}">
-
-                        <label class="form-check-label" for="technology{{ technology.id }}">
-                            {{ technology.name }}
-                        </label>
-
-                    </div>
-
-                    {% endfor %}
+                <div>
 
                     <div class="mb-3">
                         <label for="github_url" class="form-label">GitHub URL</label>
@@ -90,8 +75,13 @@
 
 
                     <div class="mb-3">
-                        <label for="image" class="form-label">Project Image</label>
-                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <label for="images" class="form-label">Project Images</label>
+                        <input type="file" class="form-control" id="images" name="images"
+                            accept=".png,.jpg,.jpeg,.webp" multiple data-preview="imagePreview">
+                        <div class="form-text">
+                            You can select several images. The first one becomes the cover.
+                        </div>
+                        <div class="upload-preview" id="imagePreview"></div>
                     </div>
 
                 </div>
