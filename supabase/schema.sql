@@ -83,27 +83,3 @@ alter table public.messages enable row level security;
 insert into storage.buckets (id, name, public)
 values ('portfolio', 'portfolio', true)
 on conflict (id) do nothing;
-
--- Used once by scripts/migrate_mysql_to_supabase.py: after rows are copied with
--- their original ids, move each identity sequence past the highest id.
-create or replace function public.sync_id_sequences()
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-    t text;
-begin
-    foreach t in array array['users', 'skills', 'technologies', 'projects',
-                             'project_images', 'certificates', 'messages'] loop
-        execute format(
-            'select setval(pg_get_serial_sequence(%L, ''id''), coalesce((select max(id) from %I), 0) + 1, false)',
-            'public.' || t, t
-        );
-    end loop;
-end;
-$$;
-
-revoke execute on function public.sync_id_sequences() from public, anon, authenticated;
-grant execute on function public.sync_id_sequences() to service_role;
