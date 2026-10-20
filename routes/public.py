@@ -17,8 +17,8 @@ def project_page():
 
 @public.route('/skills')
 def skills_page():
-    skill_groups = list_skills_by_category()
-    return render_template("skills.html", skill_groups = skill_groups)
+    skills = supabase.table("skills").select("*").order("id").execute().data
+    return render_template("skills.html", skills = skills)
 
 @public.route('/projects/<int:project_id>')
 def project_detail(project_id):

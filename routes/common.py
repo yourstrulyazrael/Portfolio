@@ -7,8 +7,6 @@ CERTIFICATE_FOLDER = "certificates"
 # PostgREST embeds technologies through the project_technologies junction table
 PROJECT_SELECT = "*, technologies(id, name), project_images(id, filename, sort_order)"
 
-PROFICIENCY_LEVELS = {"beginner": 1, "intermediate": 2, "advanced": 3, "expert": 4}
-
 
 def media_url(folder, filename):
     """Public URL of a file in the Storage bucket."""
@@ -36,11 +34,10 @@ def list_projects(limit=None, newest_first=False):
 
 
 def list_skills_by_category():
-    """Skills grouped as [(category, [skill, ...]), ...], each skill with a 1-4 proficiency level."""
+    """Skills grouped as [(category, [skill, ...]), ...] for the home page."""
     skills = supabase.table("skills").select("*").order("category").order("name").execute().data
     groups = {}
     for skill in skills:
-        skill["level"] = PROFICIENCY_LEVELS.get(skill["proficiency"].strip().lower())
         groups.setdefault(skill["category"], []).append(skill)
     return list(groups.items())
 

@@ -858,6 +858,16 @@
             overflow: hidden;
         }
 
+        /* Cards that are mostly image don't need the frosted-glass blur. Blurring behind large
+           images is costly on phones, and Chrome can fail to paint an image beneath it. */
+        .project-card,
+        .project-gallery,
+        .certificate-card {
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            background: rgba(15, 23, 42, 0.88);
+        }
+
         .project-card-media {
             position: relative;
             display: block;
@@ -975,9 +985,42 @@
             line-height: 1.75;
         }
 
-        .project-sidebar {
-            position: sticky;
-            top: 100px;
+        .project-layout {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-areas:
+                "gallery"
+                "sidebar"
+                "about";
+        }
+
+        .project-layout-gallery {
+            grid-area: gallery;
+        }
+
+        .project-layout-sidebar {
+            grid-area: sidebar;
+        }
+
+        .project-layout-about {
+            grid-area: about;
+        }
+
+        @media (min-width: 992px) {
+            .project-layout {
+                grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+                grid-template-rows: auto 1fr;
+                grid-template-areas:
+                    "gallery sidebar"
+                    "about sidebar";
+                align-items: start;
+            }
+
+            .project-sidebar {
+                position: sticky;
+                top: 100px;
+            }
         }
 
         .sidebar-label {
@@ -988,54 +1031,6 @@
             text-transform: uppercase;
             color: var(--text-muted);
             font-family: inherit;
-        }
-
-        /* ---------- Skills ---------- */
-
-        .skill-section+.skill-section {
-            margin-top: 40px;
-        }
-
-        .skill-section-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .skill-section-title span {
-            padding: 1px 9px;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-family: "Inter", sans-serif;
-            color: var(--violet-pale);
-            background: rgba(139, 92, 246, 0.16);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-        }
-
-        .skill-level-label {
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        .skill-meter {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 4px;
-        }
-
-        .skill-meter span {
-            height: 6px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .skill-meter span.is-filled {
-            background: var(--gradient);
-            box-shadow: 0 0 8px rgba(124, 58, 237, 0.45);
         }
 
         /* ---------- Home ---------- */
@@ -1250,7 +1245,15 @@
             gap: 8px;
             margin-top: 10px;
             overflow-x: auto;
-            padding-bottom: 4px;
+            padding-bottom: 6px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139, 92, 246, 0.45) transparent;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x proximity;
+        }
+
+        .gallery-thumbs button {
+            scroll-snap-align: start;
         }
 
         .gallery-thumbs button {
@@ -1455,6 +1458,182 @@
             color: var(--violet-pale);
         }
 
+        /* ---------- Touch & small screens ---------- */
+
+        /* Finger-sized tap targets on touchscreens (phones and tablets) */
+        @media (pointer: coarse) {
+            .btn-sm {
+                min-height: 40px;
+                padding: 0.45rem 0.9rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .section-link,
+            .stretched-title,
+            .site-footer a,
+            a.small {
+                display: inline-flex;
+                align-items: center;
+                min-height: 40px;
+            }
+
+            .tech-chip {
+                min-height: 40px;
+                padding: 8px 16px;
+            }
+
+            .form-check {
+                min-height: 32px;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+            }
+
+            .gallery-thumbs button {
+                width: 96px;
+                height: 62px;
+            }
+        }
+
+        /* On touchscreens a tap triggers :hover and it stays stuck afterwards,
+           so the lift/zoom effects are only for devices with a real pointer */
+        @media (hover: none) {
+
+            .row .card.h-100:hover,
+            .btn-primary:hover,
+            .back-link:hover,
+            .brand:hover .brand-mark {
+                transform: none;
+            }
+
+            .project-card:hover .project-card-media img,
+            .certificate-card:hover .certificate-preview img {
+                transform: none;
+            }
+
+            .card:hover {
+                border-color: var(--border) !important;
+                box-shadow: none !important;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+
+            /* iOS zooms into any input with text smaller than 16px */
+            .nav-search .form-control,
+            .form-control,
+            .form-select {
+                font-size: 16px;
+            }
+
+            .site-header {
+                padding: 10px 10px 0;
+            }
+
+            .navbar {
+                padding: 6px 8px 6px 10px;
+            }
+
+            .brand-mark {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+            }
+
+            .brand-name {
+                font-size: 0.98rem;
+            }
+
+            .page-header {
+                padding-bottom: 24px;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .back-link {
+                margin-top: 18px;
+                margin-bottom: 14px;
+            }
+
+            .hero {
+                min-height: 0;
+                padding-top: 8px;
+            }
+
+            .hero-title {
+                font-size: 2.35rem;
+            }
+
+            .hero .btn-lg,
+            .cta-panel .btn-lg {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .home-section {
+                margin-top: 64px;
+            }
+
+            .cta-panel {
+                padding: 40px 18px;
+                border-radius: 20px;
+            }
+
+            .card-body.p-4 {
+                padding: 1.15rem !important;
+            }
+
+            .image-manager {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+            }
+
+            .image-tile-actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .site-footer {
+                margin-top: 56px;
+                text-align: center;
+            }
+
+            .site-footer .d-flex.gap-3 {
+                flex-wrap: wrap;
+                justify-content: center;
+                column-gap: 18px !important;
+            }
+        }
+
+        /* Tablets: the collapsed menu has room for links side by side */
+        @media (min-width: 576px) and (max-width: 991.98px) {
+            .navbar-collapse .navbar-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .nav-actions {
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+
+            .nav-actions .nav-search {
+                flex: 1;
+            }
+
+            .nav-actions .nav-cta {
+                min-height: 40px;
+                display: inline-flex;
+                align-items: center;
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
 
             body,
@@ -1645,6 +1824,26 @@
             }
             window.addEventListener("scroll", onScroll, { passive: true });
             onScroll();
+        })();
+
+        // Close the collapsed (phone/tablet) menu when tapping outside it or pressing Escape
+        (function () {
+            var menu = document.getElementById("navbarContent");
+            var header = document.getElementById("siteHeader");
+
+            function close() {
+                if (menu.classList.contains("show")) {
+                    bootstrap.Collapse.getOrCreateInstance(menu, { toggle: false }).hide();
+                }
+            }
+
+            document.addEventListener("click", function (event) {
+                if (!header.contains(event.target)) close();
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") close();
+            });
         })();
 
         // Fade images in over their shimmer placeholder once they've loaded

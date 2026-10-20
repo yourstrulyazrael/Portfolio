@@ -8,61 +8,69 @@
 
     <a href="/" class="back-link">←</a>
 
-    <header class="page-header">
-        <p class="eyebrow">Toolkit</p>
-        <h1 class="fw-bold mb-2">My Skills</h1>
-        <p class="text-muted mb-0">
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1">My Skills</h1>
+        <p class="text-muted">
             Technologies and skills I'm currently developing.
         </p>
-    </header>
-
-    {% if skill_groups %}
-
-    {% for category, skills in skill_groups %}
-    <section class="skill-section">
-
-        <h2 class="skill-section-title">
-            {{ category }}
-            <span>{{ skills | length }}</span>
-        </h2>
-
-        <div class="row g-3">
-            {% for skill in skills %}
-            <div class="col-sm-6 col-lg-4">
-                <div class="card skill-card h-100">
-                    <div class="card-body">
-
-                        <div class="d-flex justify-content-between align-items-baseline gap-2 mb-3">
-                            <h3 class="h6 fw-bold mb-0">{{ skill.name }}</h3>
-                            <span class="skill-level-label">{{ skill.proficiency }}</span>
-                        </div>
-
-                        {% if skill.level %}
-                        <div class="skill-meter" role="meter" aria-valuemin="1" aria-valuemax="4"
-                            aria-valuenow="{{ skill.level }}" aria-label="{{ skill.name }}: {{ skill.proficiency }}">
-                            {% for step in range(1, 5) %}
-                            <span class="{{ 'is-filled' if step <= skill.level }}"></span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-    </section>
-    {% endfor %}
-
-    {% else %}
-
-    <div class="empty-state">
-        <h2 class="h5 fw-bold">No skills yet</h2>
-        <p class="text-muted mb-0">Skills will show up here once they're added.</p>
     </div>
 
-    {% endif %}
+    <div class="row g-4">
+
+        {% for skill in skills %}
+
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <h2 class="card-title h4 fw-bold mb-3">
+                        {{ skill.name }}
+                    </h2>
+
+                    <p class="card-text mb-2">
+                        <strong>Category:</strong>
+                        <span class="badge bg-primary">
+                            {{ skill.category }}
+                        </span>
+                    </p>
+
+                    <p class="card-text">
+                        <strong>Proficiency:</strong>
+
+                        {% if skill.proficiency == "Beginner" %}
+                        <span class="badge bg-warning text-dark">
+                            {{ skill.proficiency }}
+                        </span>
+
+                        {% elif skill.proficiency == "Intermediate" %}
+                        <span class="badge bg-info text-dark">
+                            {{ skill.proficiency }}
+                        </span>
+
+                        {% elif skill.proficiency == "Advanced" %}
+                        <span class="badge bg-success">
+                            {{ skill.proficiency }}
+                        </span>
+
+                        {% else %}
+                        <span class="badge bg-secondary">
+                            {{ skill.proficiency }}
+                        </span>
+                        {% endif %}
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
 
 </div>
 

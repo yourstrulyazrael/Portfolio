@@ -14,12 +14,11 @@
         <h1 class="fw-bold mb-0">{{ project.title }}</h1>
     </header>
 
-    <div class="row g-4">
-
-        <div class="col-lg-8">
+    {# Phones/tablets: gallery, links, description. Desktop: gallery + description left, links right. #}
+    <div class="project-layout">
 
             {% if images %}
-            <div class="card project-gallery">
+            <div class="card project-gallery project-layout-gallery">
 
                 <div id="projectCarousel" class="carousel slide" data-bs-ride="false">
 
@@ -71,16 +70,14 @@
             </div>
             {% endif %}
 
-            <div class="card mt-4">
+            <div class="card project-layout-about">
                 <div class="card-body p-4">
                     <h2 class="h5 fw-semibold mb-3">About this project</h2>
                     <p class="text-soft mb-0 project-description">{{ project.description }}</p>
                 </div>
             </div>
 
-        </div>
-
-        <aside class="col-lg-4">
+        <aside class="project-layout-sidebar">
 
             <div class="card project-sidebar">
                 <div class="card-body p-4">
