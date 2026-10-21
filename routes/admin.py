@@ -85,7 +85,26 @@ def read_project_form():
         "description": request.form["description"],
         "github_url": github_url,
         "live_url": live_url,
+        "demo_credentials": read_demo_credentials(),
     }
+
+
+MAX_DEMO_ACCOUNTS = 10
+
+
+def read_demo_credentials():
+    """Demo logins from the repeating form rows, skipping rows with no username and no password."""
+    rows = zip(
+        request.form.getlist("demo_label"),
+        request.form.getlist("demo_username"),
+        request.form.getlist("demo_password"),
+    )
+    credentials = []
+    for label, username, password in rows:
+        label, username, password = label.strip()[:50], username.strip()[:150], password.strip()[:150]
+        if username or password:
+            credentials.append({"label": label, "username": username, "password": password})
+    return credentials[:MAX_DEMO_ACCOUNTS]
 
 
 def read_technology_ids():

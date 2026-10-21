@@ -100,6 +100,33 @@
                     </div>
                     {% endif %}
 
+                    {% if project.live_url and project.demo_credentials %}
+                    <section class="demo-credentials mb-4" aria-labelledby="demoCredentialsTitle">
+                        <h2 class="sidebar-label d-flex align-items-center gap-2" id="demoCredentialsTitle">
+                            {{ icon('key') }} Try the demo
+                        </h2>
+
+                        {% for account in project.demo_credentials %}
+                        <div class="demo-account">
+                            {% if account.label %}
+                            <div class="demo-account-label">{{ account.label }}</div>
+                            {% endif %}
+
+                            {% for field, value in [('Username', account.username), ('Password', account.password)] if value %}
+                            <div class="demo-account-row">
+                                <span class="demo-account-key">{{ field }}</span>
+                                <code class="demo-account-value">{{ value }}</code>
+                                <button type="button" class="demo-copy" data-copy="{{ value }}"
+                                    aria-label="Copy {{ account.label ~ ' ' if account.label }}{{ field | lower }}">
+                                    {{ icon('copy') }}<span class="demo-copy-done">Copied</span>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </section>
+                    {% endif %}
+
                     <h2 class="sidebar-label">Built with</h2>
 
                     {% if technologies %}

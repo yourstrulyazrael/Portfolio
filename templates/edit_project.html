@@ -87,6 +87,10 @@
                         </div>
                     </div>
 
+                    {% with credentials = project.demo_credentials %}
+                    {% include "_demo_credentials_fields.html" %}
+                    {% endwith %}
+
                     {% if images %}
                     <div class="mb-3">
                         <label class="form-label fw-semibold">

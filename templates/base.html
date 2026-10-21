@@ -1033,6 +1033,155 @@
             font-family: inherit;
         }
 
+        /* ---------- Demo accounts ---------- */
+
+        .demo-rows {
+            display: grid;
+            gap: 10px;
+        }
+
+        .demo-rows:not(:empty) {
+            margin-bottom: 12px;
+        }
+
+        .demo-row {
+            display: grid;
+            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) minmax(0, 1fr) auto;
+            align-items: end;
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .demo-row-remove {
+            width: 40px;
+            height: 38px;
+            padding: 0;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+
+        @media (max-width: 767.98px) {
+            .demo-row {
+                grid-template-columns: minmax(0, 1fr) auto;
+            }
+
+            .demo-row-label {
+                grid-column: 1 / 2;
+            }
+
+            .demo-row-field:not(.demo-row-label) {
+                grid-column: 1 / -1;
+            }
+
+            /* Remove button sits beside the Role field */
+            .demo-row-remove {
+                grid-column: 2;
+                grid-row: 1;
+            }
+        }
+
+        .demo-account {
+            padding: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            background: rgba(139, 92, 246, 0.07);
+        }
+
+        .demo-account+.demo-account {
+            margin-top: 10px;
+        }
+
+        .demo-account-label {
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--violet-pale);
+        }
+
+        .demo-account-row {
+            display: grid;
+            grid-template-columns: 70px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .demo-account-row+.demo-account-row {
+            margin-top: 6px;
+        }
+
+        .demo-account-key {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .demo-account-value {
+            overflow-wrap: anywhere;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(2, 4, 12, 0.55);
+            color: #e2e8f0;
+            font-size: 0.82rem;
+        }
+
+        .demo-copy {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-soft);
+            transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .demo-copy:hover {
+            color: #ffffff;
+            border-color: rgba(139, 92, 246, 0.6);
+        }
+
+        .demo-copy .icon {
+            width: 15px;
+            height: 15px;
+        }
+
+        .demo-copy-done {
+            position: absolute;
+            right: calc(100% + 6px);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            white-space: nowrap;
+            background: #16a34a;
+            color: #ffffff;
+            opacity: 0;
+            transform: translateX(4px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none;
+        }
+
+        .demo-copy.is-copied {
+            color: #bbf7d0;
+            border-color: rgba(34, 197, 94, 0.6);
+        }
+
+        .demo-copy.is-copied .demo-copy-done {
+            opacity: 1;
+            transform: none;
+        }
+
+        @media (pointer: coarse) {
+            .demo-copy {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
         /* ---------- Home ---------- */
 
         .hero {
@@ -1845,6 +1994,35 @@
                 if (event.key === "Escape") close();
             });
         })();
+
+        // Copy buttons: <button data-copy="text">
+        document.addEventListener("click", function (event) {
+            var button = event.target.closest("[data-copy]");
+            if (!button) return;
+
+            function copied() {
+                button.classList.add("is-copied");
+                clearTimeout(button._copiedTimer);
+                button._copiedTimer = setTimeout(function () { button.classList.remove("is-copied"); }, 1500);
+            }
+
+            function selectFallback() {
+                // Clipboard blocked (e.g. not HTTPS): select the value so it can be copied by hand
+                var value = button.parentElement.querySelector("code");
+                if (!value) return;
+                var range = document.createRange();
+                range.selectNodeContents(value);
+                var selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(button.dataset.copy).then(copied, selectFallback);
+            } else {
+                selectFallback();
+            }
+        });
 
         // Fade images in over their shimmer placeholder once they've loaded
         document.querySelectorAll("img[data-skeleton]").forEach(function (img) {

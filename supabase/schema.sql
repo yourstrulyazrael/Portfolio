@@ -29,11 +29,15 @@ create table if not exists public.projects (
     title varchar(100) not null,
     description text not null,
     github_url varchar(255),
-    live_url varchar(255)
+    live_url varchar(255),
+    -- Logins for the live demo: [{"label": "Admin", "username": "...", "password": "..."}, ...]
+    -- These are shown publicly on the project page, so only use throwaway demo accounts.
+    demo_credentials jsonb not null default '[]'::jsonb
 );
 
 -- Added after the first release; brings older databases up to date.
 alter table public.projects add column if not exists live_url varchar(255);
+alter table public.projects add column if not exists demo_credentials jsonb not null default '[]'::jsonb;
 
 create table if not exists public.project_technologies (
     project_id bigint not null references public.projects(id) on delete cascade,

@@ -23,6 +23,8 @@ def shape_project(row):
     row["cover_image"] = images[0]["filename"] if images else None
     row["technology_list"] = technologies
     row["technologies"] = ", ".join(technology["name"] for technology in technologies) or None
+    # Missing until supabase/schema.sql's demo_credentials column has been added
+    row["demo_credentials"] = row.get("demo_credentials") or []
     return row
 
 
