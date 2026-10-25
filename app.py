@@ -21,6 +21,12 @@ app.register_blueprint(public)
 app.register_blueprint(auth)
 app.register_blueprint(admin)
 app.secret_key = SECRET_KEY
+if not SECRET_KEY:
+    app.logger.error(
+        "SECRET_KEY is not set, so the login and contact pages cannot work. Add it to .env locally and to "
+        "Vercel -> Settings -> Environment Variables (then redeploy). Generate one with: "
+        "python -c \"import secrets; print(secrets.token_hex(32))\""
+    )
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
