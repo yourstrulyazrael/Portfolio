@@ -36,16 +36,26 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=8)
 csrf = CSRFProtect(app)
 
 
+DEPLOY_VERSION = (os.getenv("VERCEL_GIT_COMMIT_SHA") or os.getenv("VERCEL_DEPLOYMENT_ID") or "")[:10]
+
+
 @lru_cache(maxsize=None)
 def asset_version(path):
-    file_path = os.path.join(app.static_folder, path)
-    with open(file_path, "rb") as file:
-        return hashlib.md5(file.read()).hexdigest()[:10]
+    try:
+        with open(os.path.join(app.static_folder, path), "rb") as file:
+            return hashlib.md5(file.read()).hexdigest()[:10]
+    except OSError:
+        return DEPLOY_VERSION
 
 
 def asset_url(path):
-    version = asset_version(path) if not app.debug else str(int(os.path.getmtime(os.path.join(app.static_folder, path))))
-    return f"/{path}?v={version}"
+    version = asset_version(path)
+    if app.debug:
+        try:
+            version = str(int(os.path.getmtime(os.path.join(app.static_folder, path))))
+        except OSError:
+            pass
+    return f"/{path}?v={version}" if version else f"/{path}"
 
 
 @app.context_processor
@@ -101,7 +111,11 @@ def csrf_failed(error):
 
 @app.errorhandler(500)
 def internal_server_error(error):
-    return render_template("500.html"), 500
+    try:
+        return render_template("500.html"), 500
+    except Exception:
+        app.logger.exception("The error page itself failed to render")
+        return "Something went wrong on our side. Please try again in a moment.", 500, {"Content-Type": "text/plain; charset=utf-8"}
 
 
 if __name__ == '__main__':
