@@ -4,75 +4,68 @@
 
 {% block content %}
 
-<div class="container py-5">
+<div class="container auth-page">
 
-    <div class="row justify-content-center">
+    <div class="auth-card card terminal-card">
+        <div class="browser-bar" aria-hidden="true">
+            <span class="browser-dots"><span></span><span></span><span></span></span>
+            <span class="terminal-title">auth.py</span>
+        </div>
+        <div class="card-body">
 
-        <div class="col-md-6 col-lg-4">
+            <h1 class="auth-title">Admin Login</h1>
+            <p class="text-muted mb-1">Sign in to manage your portfolio.</p>
+            <p class="auth-command" aria-hidden="true">ssh admin@portfolio</p>
 
-            <div class="card shadow-sm border-0">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                <div class="card-body p-4">
-
-                    <h1 class="fw-bold text-center mb-4">
-                        Admin Login
-                    </h1>
-
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-
-                    {% for category, message in messages %}
-
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-
-                        {{ message }}
-
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                        </button>
-
-                    </div>
-
-                    {% endfor %}
-
-                    {% endif %}
-                    {% endwith %}
-
-                    <form method="POST">
-
-                        <div class="mb-3">
-
-                            <label for="username" class="form-label fw-semibold">
-                                Username
-                            </label>
-
-                            <input type="text" class="form-control" id="username" name="username" required>
-
-                        </div>
-
-                        <div class="mb-4">
-
-                            <label for="password" class="form-label fw-semibold">
-                                Password
-                            </label>
-
-                            <input type="password" class="form-control" id="password" name="password" required>
-
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">
-                            Login
-                        </button>
-
-                    </form>
-
+                <div class="mb-3">
+                    <label for="username" class="form-label terminal-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required
+                        autocomplete="username" autocapitalize="off" spellcheck="false" autofocus>
                 </div>
 
-            </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label terminal-label">Password</label>
+                    <div class="password-field">
+                        <input type="password" class="form-control" id="password" name="password" required
+                            autocomplete="current-password">
+                        <button type="button" class="password-toggle" aria-controls="password" aria-pressed="false"
+                            aria-label="Show password">Show</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100" data-loading-text="Signing in...">
+                    Sign in
+                </button>
+
+            </form>
 
         </div>
-
     </div>
+
+    <p class="text-center mt-4 mb-0">
+        <a href="{{ url_for('public.home') }}" class="small">← cd ~/portfolio</a>
+    </p>
 
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var toggle = document.querySelector(".password-toggle");
+        var input = document.getElementById("password");
+        toggle.addEventListener("click", function () {
+            var show = input.type === "password";
+            input.type = show ? "text" : "password";
+            toggle.textContent = show ? "Hide" : "Show";
+            toggle.setAttribute("aria-pressed", String(show));
+            toggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
+            input.focus();
+        });
+    })();
+</script>
 {% endblock %}

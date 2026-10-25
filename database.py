@@ -18,15 +18,12 @@ def bucket():
 
 
 def first(response):
-    """The first row of a query response, or None when nothing matched."""
     return response.data[0] if response.data else None
 
 
 def parse_date(value):
-    """Supabase returns dates as ISO strings; templates expect date objects."""
     return date.fromisoformat(value) if value else None
 
 
 def parse_datetime(value):
-    """Parse a timestamptz string and convert it from UTC to the server's local time."""
     return datetime.fromisoformat(value).astimezone() if value else None

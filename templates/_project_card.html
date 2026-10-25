@@ -1,7 +1,10 @@
-{# One project card. Expects `project` (from list_projects / get_project). #}
 {% from "_icons.html" import icon %}
 
-<article class="card project-card h-100">
+{% set host = (project.live_url or '') | replace('https://', '') | replace('http://', '') %}
+{% set host = host.split('/')[0] if host else 'localhost' %}
+
+<article class="card project-card h-100"
+    data-tech="{{ project.technology_list | map(attribute='name') | map('lower') | join('|') }}">
 
     <a href="{{ url_for('public.project_detail', project_id=project.id) }}" class="project-card-media"
         tabindex="-1" aria-hidden="true">
@@ -11,11 +14,11 @@
                 data-skeleton>
         </div>
         {% else %}
-        <div class="project-card-placeholder">{{ icon('image') }}</div>
+        <div class="project-card-placeholder">{{ icon('code') }}</div>
         {% endif %}
 
         {% if project.live_url %}
-        <span class="live-badge"><span class="live-dot"></span>Live</span>
+        <span class="live-badge"><span class="live-dot"></span>live</span>
         {% endif %}
 
         {% if project.image_count > 1 %}
@@ -25,25 +28,34 @@
 
     <div class="card-body d-flex flex-column">
 
-        <h2 class="card-title h5 fw-bold mb-2">
-            <a href="{{ url_for('public.project_detail', project_id=project.id) }}" class="stretched-title">
-                {{ project.title }}
-            </a>
-        </h2>
+        <div class="repo-head">
+            {{ icon('folder') }}
+            <h2 class="card-title">
+                <a href="{{ url_for('public.project_detail', project_id=project.id) }}" class="stretched-title">
+                    {{ project.title }}
+                </a>
+            </h2>
+        </div>
 
-        <p class="card-text text-muted project-card-description">
+        {% if project.status == 'in_progress' %}
+        <p class="mb-1"><span class="badge status-badge" data-status="in_progress">In progress</span></p>
+        {% endif %}
+
+        <p class="repo-host">{{ icon('external') if project.live_url }} <span>{{ host }}</span></p>
+
+        <p class="card-text project-card-description">
             {{ project.description }}
         </p>
 
         {% if project.technology_list %}
-        <div class="d-flex flex-wrap gap-1 mb-3">
+        <ul class="lang-list" aria-label="Built with">
             {% for technology in project.technology_list %}
-            <span class="badge bg-primary">{{ technology.name }}</span>
+            <li>{{ technology.name }}</li>
             {% endfor %}
-        </div>
+        </ul>
         {% endif %}
 
-        <div class="mt-auto d-flex flex-wrap gap-2">
+        <div class="card-actions">
 
             <a href="{{ url_for('public.project_detail', project_id=project.id) }}" class="btn btn-primary btn-sm">
                 View Details

@@ -3,22 +3,34 @@
 
 {% block title %}{{ project.title }}{% endblock %}
 
+{% block tab_file %}{{ project.title | lower | replace(" ", "-") | truncate(40, True, "") }}.md{% endblock %}
+{% block description %}{{ project.description | striptags | truncate(155) }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_image %}{{ media_url('projects', project.cover_image) if project.cover_image else super() }}{% endblock %}
+
 {% block content %}
 
 <div class="container">
 
-    <a href="{{ url_for('public.project_page') }}" class="back-link" aria-label="Back to projects">←</a>
+    <a href="{{ url_for('public.project_page') }}" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to projects)</span></a>
 
     <header class="page-header">
-        <p class="eyebrow">Project</p>
-        <h1 class="fw-bold mb-0">{{ project.title }}</h1>
+        <p class="eyebrow">project</p>
+        <h1 class="mb-0">{{ project.title }}</h1>
     </header>
 
-    {# Phones/tablets: gallery, links, description. Desktop: gallery + description left, links right. #}
     <div class="project-layout">
 
             {% if images %}
+            {% set host = (project.live_url or '') | replace('https://', '') | replace('http://', '') %}
             <div class="card project-gallery project-layout-gallery">
+
+                <div class="browser-bar" aria-hidden="true">
+                    <span class="browser-dots"><span></span><span></span><span></span></span>
+                    <span class="browser-url">{{ host.split('/')[0] if host else 'localhost' }}</span>
+                </div>
+
+                <div class="gallery-body">
 
                 <div id="projectCarousel" class="carousel slide" data-bs-ride="false">
 
@@ -67,15 +79,36 @@
                 </div>
                 {% endif %}
 
+                </div>
+
             </div>
             {% endif %}
 
-            <div class="card project-layout-about">
+            <article class="card project-layout-about case-study">
                 <div class="card-body p-4">
-                    <h2 class="h5 fw-semibold mb-3">About this project</h2>
-                    <p class="text-soft mb-0 project-description">{{ project.description }}</p>
+                    <h2 class="case-heading">Overview</h2>
+                    <p class="text-soft project-description">{{ project.description }}</p>
+
+                    {% for heading, text in [('The problem', project.problem), ('The solution', project.solution)] if text %}
+                    <h2 class="case-heading">{{ heading }}</h2>
+                    <p class="text-soft project-description">{{ text }}</p>
+                    {% endfor %}
+
+                    {% if project.feature_list %}
+                    <h2 class="case-heading">Key features</h2>
+                    <ul class="feature-list">
+                        {% for feature in project.feature_list %}
+                        <li>{{ feature }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    {% if project.challenges %}
+                    <h2 class="case-heading">Challenges &amp; lessons learned</h2>
+                    <p class="text-soft project-description">{{ project.challenges }}</p>
+                    {% endif %}
                 </div>
-            </div>
+            </article>
 
         <aside class="project-layout-sidebar">
 
@@ -127,6 +160,29 @@
                     </section>
                     {% endif %}
 
+                    <dl class="project-facts">
+                        <div>
+                            <dt>Status</dt>
+                            <dd><span class="badge status-badge" data-status="{{ project.status }}">{{ project_statuses[project.status] }}</span></dd>
+                        </div>
+                        {% if project.started_on or project.finished_on %}
+                        <div>
+                            <dt>Timeline</dt>
+                            <dd>
+                                {{ project.started_on.strftime('%b %Y') if project.started_on else '' }}
+                                {%- if project.started_on %} – {% endif -%}
+                                {{ project.finished_on.strftime('%b %Y') if project.finished_on else ('present' if project.status == 'in_progress' else '') }}
+                            </dd>
+                        </div>
+                        {% endif %}
+                        {% if project.role %}
+                        <div>
+                            <dt>My role</dt>
+                            <dd>{{ project.role }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+
                     <h2 class="sidebar-label">Built with</h2>
 
                     {% if technologies %}
@@ -159,7 +215,6 @@
 {% block scripts %}
 {% if images | length > 1 %}
 <script>
-    // Bootstrap only syncs indicators inside the carousel, so keep the thumbnails and counter in step manually
     document.getElementById("projectCarousel").addEventListener("slide.bs.carousel", function (event) {
         document.querySelectorAll(".gallery-thumbs button").forEach(function (thumb, index) {
             var active = index === event.to;

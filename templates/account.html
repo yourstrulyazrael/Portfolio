@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Account{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    {% if not must_change %}
+    <a href="{{ url_for('admin.dashboard') }}" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to dashboard)</span></a>
+    {% endif %}
+
+    <header class="page-header">
+        <p class="eyebrow">admin</p>
+        <h1 class="mb-2">Account</h1>
+        <p class="text-muted mb-0">Change the username and password you sign in with.</p>
+    </header>
+
+    {% if must_change %}
+    <div class="alert alert-warning d-flex gap-2 align-items-start" role="alert">
+        {{ icon('lock') }}
+        <div>
+            <strong>Your password needs to change.</strong>
+            It's too short, too common, or contains your username, so anyone could guess it.
+            The dashboard unlocks once you set a stronger one.
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card account-card">
+        <div class="card-body p-4">
+
+            <form method="POST" id="accountForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <fieldset class="form-section pt-0 border-0">
+                    <legend class="form-section-title">Sign-in details</legend>
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required
+                            value="{{ user.username }}" minlength="3" maxlength="50" pattern="[A-Za-z0-9_.\-]{3,50}"
+                            autocomplete="username" autocapitalize="off" spellcheck="false" aria-describedby="usernameHelp">
+                        <div class="form-text" id="usernameHelp">
+                            Letters, numbers, dots, dashes or underscores.
+                            {% if user.username | lower == 'admin' %}Something other than "admin" makes guessing harder.{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">
+                            New password{% if not must_change %} <span class="text-muted fw-normal">(leave blank to keep the current one)</span>{% endif %}
+                        </label>
+                        <div class="password-field">
+                            <input type="password" class="form-control" id="new_password" name="new_password"
+                                {% if must_change %}required{% endif %} minlength="{{ min_length }}" maxlength="128"
+                                autocomplete="new-password" aria-describedby="passwordRules">
+                            <button type="button" class="password-toggle" aria-controls="new_password" aria-pressed="false"
+                                aria-label="Show new password">Show</button>
+                        </div>
+                        <ul class="password-rules" id="passwordRules">
+                            <li data-rule="length">At least {{ min_length }} characters</li>
+                            <li data-rule="username">Doesn't contain your username</li>
+                            <li data-rule="match">Both new passwords match</li>
+                        </ul>
+                        <div class="form-text">A short phrase of a few random words is strong and easy to remember. A password manager is even better.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm new password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                            {% if must_change %}required{% endif %} maxlength="128" autocomplete="new-password">
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend class="form-section-title">Confirm it's you</legend>
+                    <div class="mb-4">
+                        <label for="current_password" class="form-label">Current password</label>
+                        <div class="password-field">
+                            <input type="password" class="form-control" id="current_password" name="current_password"
+                                required autocomplete="current-password">
+                            <button type="button" class="password-toggle" aria-controls="current_password" aria-pressed="false"
+                                aria-label="Show current password">Show</button>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">Save Account</button>
+                    {% if not must_change %}
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    {% endif %}
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        document.querySelectorAll(".password-toggle").forEach(function (toggle) {
+            var input = document.getElementById(toggle.getAttribute("aria-controls"));
+            var label = toggle.getAttribute("aria-label").replace("Show ", "");
+            toggle.addEventListener("click", function () {
+                var show = input.type === "password";
+                input.type = show ? "text" : "password";
+                toggle.textContent = show ? "Hide" : "Show";
+                toggle.setAttribute("aria-pressed", String(show));
+                toggle.setAttribute("aria-label", (show ? "Hide " : "Show ") + label);
+                input.focus();
+            });
+        });
+
+        var username = document.getElementById("username");
+        var password = document.getElementById("new_password");
+        var confirm = document.getElementById("confirm_password");
+        var minLength = {{ min_length }};
+
+        function update() {
+            var value = password.value;
+            var name = username.value.trim().toLowerCase();
+            var rules = {
+                length: value.length >= minLength,
+                username: !value || name.length < 3 || value.toLowerCase().indexOf(name) === -1,
+                match: !!value && value === confirm.value
+            };
+            Object.keys(rules).forEach(function (rule) {
+                var item = document.querySelector('[data-rule="' + rule + '"]');
+                item.classList.toggle("is-met", rules[rule] && !!value);
+            });
+            confirm.setCustomValidity(value && confirm.value && value !== confirm.value ? "The new passwords don't match." : "");
+        }
+
+        [username, password, confirm].forEach(function (input) { input.addEventListener("input", update); });
+        update();
+    })();
+</script>
+{% endblock %}

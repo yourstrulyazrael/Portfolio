@@ -1,0 +1,18 @@
+<div class="container error-page">
+    <div class="window terminal mb-4" aria-hidden="true">
+        <div class="window-bar">
+            <span class="browser-dots"><span></span><span></span><span></span></span>
+            <span class="window-title">bash</span>
+        </div>
+<pre class="terminal-body"><span class="prompt">james@portfolio</span>:<span class="prompt-path">~</span>$ curl -I {{ request.path | truncate(48, True) }}
+<span class="err">HTTP/1.1 {{ code }}</span> <span class="out">{{ heading }}</span>
+<span class="prompt">james@portfolio</span>:<span class="prompt-path">~</span>$ <span class="cursor"></span></pre>
+    </div>
+    <p class="eyebrow">error {{ code }}</p>
+    <h1 class="mb-3">{{ heading }}</h1>
+    <p class="text-muted mb-4">{{ message }}</p>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('public.home') }}" class="btn btn-primary">Back to Home</a>
+        <a href="{{ url_for('public.project_page') }}" class="btn btn-outline-secondary">Browse Projects</a>
+    </div>
+</div>

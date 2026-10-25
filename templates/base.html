@@ -1,2169 +1,377 @@
 <!DOCTYPE html>
-<html lang="en">
+{% from "_icons.html" import icon %}
+<html lang="en" data-bs-theme="{{ 'light' if site_settings.theme == 'light' else 'dark' }}"
+    data-accent="{{ site_settings.accent }}" data-default-mode="{{ site_settings.theme }}"
+    data-default-accent="{{ site_settings.accent }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script>
+        (function () {
+            var root = document.documentElement, saved = {};
+            try { saved = JSON.parse(localStorage.getItem("portfolio-theme") || "{}"); } catch (e) { }
+            var accents = {{ theme_accents | list | tojson }};
+            var mode = ["light", "dark", "system"].indexOf(saved.mode) > -1 ? saved.mode : root.dataset.defaultMode;
+            var accent = accents.indexOf(saved.accent) > -1 ? saved.accent : root.dataset.defaultAccent;
+            var dark = mode === "dark" || (mode !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+            root.setAttribute("data-bs-theme", dark ? "dark" : "light");
+            root.dataset.mode = mode;
+            root.dataset.accent = accent;
+        })();
+    </script>
+
+    {% set endpoint = request.endpoint or '' %}
+    {% set page_title = self.title() ~ ' · ' ~ profile.full_name %}
+    {% set canonical = request.base_url %}
+
+    <meta name="description" content="{% block description %}{{ profile.full_name }}: {{ profile.headline }}. Projects, skills and certificates in software, web development and databases.{% endblock %}">
+    <link rel="canonical" href="{{ canonical }}">
+    {% if endpoint.startswith('admin.') or endpoint == 'auth.login' or not endpoint %}
+    <meta name="robots" content="noindex, nofollow">
+    {% endif %}
+
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="{{ profile.full_name }} · Portfolio">
+    <meta property="og:title" content="{{ page_title }}">
+    <meta property="og:description" content="{{ self.description() | trim }}">
+    <meta property="og:url" content="{{ canonical }}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='og-image.png', _external=True) }}{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ page_title }}">
+    <meta name="twitter:description" content="{{ self.description() | trim }}">
+    <meta name="twitter:image" content="{{ self.og_image() | trim }}">
+
+    {% if endpoint in ('public.home', 'public.about') %}
+    <script type="application/ld+json">
+        {{ {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": profile.full_name,
+            "jobTitle": profile.headline,
+            "description": profile.bio_paragraphs[0] if profile.bio_paragraphs else profile.headline,
+            "url": url_for('public.home', _external=True),
+            "sameAs": profile.social_links | map(attribute=1) | list,
+        } | tojson }}
+    </script>
+    {% endif %}
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
+    <link rel="icon" href="{{ asset_url('favicon.svg') }}" type="image/svg+xml">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <style>
-        :root {
-            --surface: rgba(15, 23, 42, 0.72);
-            --surface-strong: rgba(15, 23, 42, 0.92);
-            --border: rgba(255, 255, 255, 0.08);
-            --border-strong: rgba(255, 255, 255, 0.16);
-            --violet: #7c3aed;
-            --violet-light: #8b5cf6;
-            --violet-soft: #a78bfa;
-            --violet-pale: #c4b5fd;
-            --blue: #2563eb;
-            --blue-light: #60a5fa;
-            --text: #f8f9fa;
-            --text-soft: #cbd5e1;
-            --text-muted: #94a3b8;
-            --gradient: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
-            --gradient-text: linear-gradient(120deg, var(--violet-pale) 0%, var(--violet-soft) 40%, var(--blue-light) 100%);
-            --radius: 16px;
-            --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
-        }
+    <link rel="stylesheet" href="{{ asset_url('css/main.css') }}">
 
-        body {
-            background:
-                radial-gradient(circle at 15% 20%,
-                    rgba(88, 28, 135, 0.35),
-                    transparent 25%),
-                radial-gradient(circle at 85% 25%,
-                    rgba(37, 99, 235, 0.25),
-                    transparent 25%),
-                radial-gradient(circle at 50% 90%,
-                    rgba(124, 58, 237, 0.2),
-                    transparent 30%),
-                #050816;
-
-            background-size: 150% 150%;
-            color: var(--text);
-            font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            animation: galaxyMove 20s ease-in-out infinite alternate;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        main {
-            flex: 1;
-        }
-
-        .container,
-        .container-fluid {
-            position: relative;
-            z-index: 1;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-
-            background-image:
-                radial-gradient(1px 1px at 10% 20%, white, transparent),
-                radial-gradient(1px 1px at 20% 80%, white, transparent),
-                radial-gradient(1px 1px at 35% 40%, white, transparent),
-                radial-gradient(1px 1px at 50% 15%, white, transparent),
-                radial-gradient(1px 1px at 65% 70%, white, transparent),
-                radial-gradient(1px 1px at 75% 25%, white, transparent),
-                radial-gradient(1px 1px at 90% 60%, white, transparent),
-                radial-gradient(1px 1px at 95% 90%, white, transparent);
-
-            background-size: 250px 250px;
-            animation: starsMove 60s linear infinite;
-            opacity: 0.6;
-        }
-
-        @keyframes galaxyMove {
-            0% {
-                background-position: 0% 0%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 100%;
-            }
-        }
-
-        @keyframes starsMove {
-            from {
-                background-position: 0 0;
-            }
-
-            to {
-                background-position: 250px 250px;
-            }
-        }
-
-        ::selection {
-            background: rgba(139, 92, 246, 0.45);
-            color: #ffffff;
-        }
-
-        /* ---------- Navbar ---------- */
-
-        .site-header {
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-            padding: 14px 16px 0;
-            transition: padding 0.25s ease;
-        }
-
-        .site-header.scrolled {
-            padding-top: 8px;
-        }
-
-        .navbar {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 8px 10px 8px 12px;
-            background: rgba(5, 8, 22, 0.6) !important;
-            backdrop-filter: blur(16px) saturate(140%);
-            -webkit-backdrop-filter: blur(16px) saturate(140%);
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
-            transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-
-        .site-header.scrolled .navbar {
-            background: rgba(5, 8, 22, 0.85) !important;
-            border-color: var(--border-strong);
-            box-shadow: 0 14px 40px -12px rgba(76, 29, 149, 0.45);
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            margin-right: 8px;
-        }
-
-        .brand-mark {
-            position: relative;
-            width: 38px;
-            height: 38px;
-            flex-shrink: 0;
-            display: grid;
-            place-items: center;
-            border-radius: 12px;
-            background: var(--gradient);
-            font-family: var(--font-display);
-            font-weight: 700;
-            font-size: 0.95rem;
-            letter-spacing: -0.02em;
-            color: #ffffff;
-            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 6px 18px -4px rgba(124, 58, 237, 0.7);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .brand-mark::after {
-            content: "";
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: #ffffff;
-            box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.8);
-        }
-
-        .brand:hover .brand-mark {
-            transform: rotate(-6deg) scale(1.05);
-            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 8px 24px -4px rgba(124, 58, 237, 0.9);
-        }
-
-        .brand-text {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.15;
-        }
-
-        .brand-name {
-            font-family: var(--font-display);
-            font-weight: 600;
-            font-size: 1.05rem;
-            color: #ffffff;
-            letter-spacing: -0.01em;
-        }
-
-        .brand-name span {
-            background: var(--gradient-text);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .brand-tag {
-            font-size: 0.66rem;
-            font-weight: 500;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
-
-        .navbar-nav {
-            gap: 2px;
-        }
-
-        .navbar .nav-link {
-            padding: 8px 14px !important;
-            border-radius: 999px;
-            font-size: 0.92rem;
-            font-weight: 500;
-            color: var(--text-soft) !important;
-            transition: color 0.2s ease, background-color 0.2s ease;
-        }
-
-        .navbar .nav-link:hover {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.06);
-        }
-
-        .navbar .nav-link.active {
-            color: #ffffff !important;
-            background-color: rgba(139, 92, 246, 0.18);
-            box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.35) inset;
-        }
-
-        .nav-search {
-            position: relative;
-        }
-
-        .nav-search .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
-            color: var(--text-muted);
-            pointer-events: none;
-            transition: color 0.2s ease;
-        }
-
-        .nav-search .form-control {
-            width: 230px;
-            padding: 8px 44px 8px 38px;
-            font-size: 0.9rem;
-            border-radius: 999px;
-            background-color: rgba(255, 255, 255, 0.04);
-            border-color: var(--border);
-            transition: width 0.3s ease, border-color 0.2s ease, background-color 0.2s ease;
-        }
-
-        .nav-search .form-control:focus {
-            width: 280px;
-            background-color: rgba(15, 23, 42, 0.95);
-        }
-
-        .nav-search:focus-within .search-icon {
-            color: var(--violet-soft);
-        }
-
-        .nav-search .form-control::-webkit-search-cancel-button {
-            display: none;
-        }
-
-        .nav-search .search-submit {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 30px;
-            height: 30px;
-            display: grid;
-            place-items: center;
-            border: none;
-            border-radius: 50%;
-            background: var(--gradient);
-            color: #ffffff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .nav-search .search-submit:hover {
-            transform: translateY(-50%) scale(1.08);
-            box-shadow: 0 4px 14px -2px rgba(124, 58, 237, 0.8);
-        }
-
-        .nav-search .search-submit svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .nav-cta {
-            padding: 8px 18px !important;
-            border-radius: 999px !important;
-            font-size: 0.9rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .navbar-toggler {
-            border: 1px solid var(--border-strong);
-            border-radius: 12px;
-            padding: 6px 10px;
-        }
-
-        .navbar-toggler:focus {
-            box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
-        }
-
-        .navbar-toggler-icon {
-            filter: invert(1);
-            width: 1.2em;
-            height: 1.2em;
-        }
-
-        @media (max-width: 991.98px) {
-            .navbar {
-                border-radius: 22px;
-            }
-
-            .navbar-collapse {
-                padding: 12px 4px 6px;
-            }
-
-            .navbar-nav {
-                margin-bottom: 12px;
-            }
-
-            .nav-actions {
-                flex-direction: column;
-                align-items: stretch !important;
-            }
-
-            .nav-search .form-control,
-            .nav-search .form-control:focus {
-                width: 100%;
-            }
-        }
-
-        /* ---------- Typography ---------- */
-
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            color: #ffffff;
-            font-family: var(--font-display);
-            letter-spacing: -0.02em;
-        }
-
-        .text-primary {
-            background: var(--gradient-text);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent !important;
-        }
-
-        p.text-primary {
-            background: none;
-            color: var(--violet-soft) !important;
-            font-size: 0.85rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-        }
-
-        .lead {
-            color: var(--text-soft);
-        }
-
-        .text-muted {
-            color: var(--text-muted) !important;
-        }
-
-        a {
-            color: var(--violet-soft);
-        }
-
-        a:hover {
-            color: var(--violet-pale);
-        }
-
-        /* ---------- Cards ---------- */
-
-        .card {
-            background: var(--surface);
-            color: var(--text);
-            border: 1px solid var(--border) !important;
-            border-radius: var(--radius);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            border-color: rgba(139, 92, 246, 0.35) !important;
-            box-shadow: 0 18px 40px -20px rgba(124, 58, 237, 0.55) !important;
-        }
-
-        .row .card.h-100:hover {
-            transform: translateY(-4px);
-        }
-
-        .card-title {
-            color: #ffffff;
-        }
-
-        .card-text {
-            color: var(--text-soft);
-        }
-
-        .card-img-top {
-            border-top-left-radius: calc(var(--radius) - 1px);
-            border-top-right-radius: calc(var(--radius) - 1px);
-        }
-
-        .badge {
-            font-weight: 500;
-            padding: 0.4em 0.75em;
-            border-radius: 999px;
-        }
-
-        .badge.bg-primary {
-            background-color: rgba(139, 92, 246, 0.16) !important;
-            color: var(--violet-pale);
-            border: 1px solid rgba(139, 92, 246, 0.35);
-        }
-
-        /* ---------- Forms ---------- */
-
-        .form-text {
-            color: var(--text-muted);
-        }
-
-        .form-label {
-            color: #e2e8f0;
-            font-weight: 500;
-            font-size: 0.92rem;
-        }
-
-        .form-control,
-        .form-select {
-            background-color: rgba(15, 23, 42, 0.8);
-            color: var(--text);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-        }
-
-        .form-control::placeholder {
-            color: #64748b;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            background-color: rgba(15, 23, 42, 0.95);
-            color: #ffffff;
-            border-color: var(--violet-light);
-            box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.2);
-        }
-
-        .form-check-input {
-            background-color: rgba(15, 23, 42, 0.8);
-            border-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .form-check-input:checked {
-            background-color: var(--violet);
-            border-color: var(--violet);
-        }
-
-        /* ---------- Buttons ---------- */
-
-        .btn {
-            border-radius: 12px;
-            font-weight: 500;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        .btn-lg {
-            padding: 0.7rem 1.5rem;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: var(--gradient);
-            border: none;
-            box-shadow: 0 8px 20px -8px rgba(124, 58, 237, 0.8);
-        }
-
-        .btn-primary:hover,
-        .btn-primary:focus {
-            background: linear-gradient(135deg, #6d28d9 0%, #1d4ed8 100%);
-            box-shadow: 0 12px 26px -8px rgba(124, 58, 237, 0.95);
-            transform: translateY(-1px);
-        }
-
-        .btn-outline-primary,
-        .btn-outline-success {
-            color: var(--violet-soft);
-            border-color: rgba(139, 92, 246, 0.6);
-        }
-
-        .btn-outline-primary:hover,
-        .btn-outline-success:hover {
-            background-color: var(--violet);
-            border-color: var(--violet);
-            color: #ffffff;
-        }
-
-        .btn-outline-secondary {
-            color: var(--text-soft);
-            border-color: rgba(255, 255, 255, 0.18);
-            background-color: rgba(255, 255, 255, 0.03);
-        }
-
-        .btn-outline-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: #ffffff;
-        }
-
-        .btn-outline-danger {
-            color: #fca5a5;
-            border-color: rgba(248, 113, 113, 0.5);
-        }
-
-        .btn-outline-danger:hover {
-            background-color: #dc2626;
-            border-color: #dc2626;
-            color: #ffffff;
-        }
-
-        /* ---------- Alerts ---------- */
-
-        .alert {
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .alert-success {
-            background-color: rgba(34, 197, 94, 0.12);
-            border-color: rgba(34, 197, 94, 0.35);
-            color: #bbf7d0;
-        }
-
-        .alert-danger {
-            background-color: rgba(239, 68, 68, 0.12);
-            border-color: rgba(239, 68, 68, 0.35);
-            color: #fecaca;
-        }
-
-        .alert-warning {
-            background-color: rgba(234, 179, 8, 0.12);
-            border-color: rgba(234, 179, 8, 0.35);
-            color: #fef08a;
-        }
-
-        .alert-info {
-            background-color: rgba(59, 130, 246, 0.12);
-            border-color: rgba(59, 130, 246, 0.35);
-            color: #bfdbfe;
-        }
-
-        .alert .btn-close {
-            filter: invert(1) grayscale(1) brightness(1.6);
-        }
-
-        /* ---------- Misc ---------- */
-
-        #searchResults {
-            background-color: var(--surface-strong) !important;
-            border: 1px solid var(--border-strong) !important;
-            border-radius: 14px !important;
-            margin-top: 8px;
-            overflow: hidden;
-        }
-
-        .back-link {
-            display: inline-grid;
-            place-items: center;
-            width: 44px;
-            height: 44px;
-            margin-top: 28px;
-            margin-bottom: 20px;
-            border-radius: 50%;
-            border: 1px solid var(--border-strong);
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--violet-soft);
-            text-decoration: none;
-            font-size: 1.25rem;
-            line-height: 1;
-            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-        }
-
-        .back-link:hover {
-            color: #ffffff;
-            background: rgba(139, 92, 246, 0.2);
-            border-color: rgba(139, 92, 246, 0.5);
-            transform: translateX(-3px);
-        }
-
-        /* ---------- Page layout ---------- */
-
-        .page-header {
-            padding: 4px 0 32px;
-        }
-
-        .eyebrow {
-            margin-bottom: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: var(--violet-soft);
-        }
-
-        .text-soft {
-            color: var(--text-soft);
-        }
-
-        main>.container,
-        main>div>.container {
-            animation: fadeUp 0.45s ease both;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: none;
-            }
-        }
-
-        .empty-state {
-            padding: 48px 24px;
-            text-align: center;
-            border: 1px dashed var(--border-strong);
-            border-radius: var(--radius);
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .icon {
-            width: 1em;
-            height: 1em;
-            flex-shrink: 0;
-        }
-
-        .btn-icon {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45em;
-        }
-
-        /* ---------- Skeletons ---------- */
-
-        .skeleton,
-        .skeleton-media {
-            position: relative;
-            overflow: hidden;
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .skeleton {
-            border-radius: 8px;
-        }
-
-        .skeleton::after,
-        .skeleton-media::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            transform: translateX(-100%);
-            background: linear-gradient(90deg,
-                    transparent 0%,
-                    rgba(167, 139, 250, 0.10) 40%,
-                    rgba(255, 255, 255, 0.08) 50%,
-                    rgba(167, 139, 250, 0.10) 60%,
-                    transparent 100%);
-            animation: shimmer 1.4s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes shimmer {
-            to {
-                transform: translateX(100%);
-            }
-        }
-
-        .skeleton-media img {
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        .skeleton-media.is-loaded {
-            background-color: transparent;
-        }
-
-        .skeleton-media.is-loaded::after {
-            display: none;
-        }
-
-        .skeleton-media.is-loaded img {
-            opacity: 1;
-        }
-
-        .skeleton-media.is-broken {
-            background:
-                radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.25), transparent 60%),
-                rgba(2, 4, 12, 0.5);
-        }
-
-        .modal-image-frame {
-            min-height: 240px;
-        }
-
-        .modal-image-frame.is-loaded {
-            min-height: 0;
-        }
-
-        /* Shown in place of the page while the next one loads */
-        .page-skeleton {
-            display: none;
-        }
-
-        body.is-navigating main {
-            display: none;
-        }
-
-        body.is-navigating .page-skeleton {
-            display: block;
-        }
-
-        .page-skeleton .sk-layout {
-            display: none;
-        }
-
-        body[data-skeleton="grid"] .sk-grid,
-        body[data-skeleton="detail"] .sk-detail,
-        body[data-skeleton="form"] .sk-form {
-            display: flex;
-        }
-
-        .sk-back {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            margin: 28px 0 20px;
-        }
-
-        .sk-eyebrow {
-            width: 90px;
-            height: 12px;
-            margin-bottom: 12px;
-        }
-
-        .sk-title {
-            width: min(320px, 70%);
-            height: 38px;
-            margin-bottom: 14px;
-        }
-
-        .sk-line {
-            height: 12px;
-            margin-bottom: 10px;
-        }
-
-        .sk-media {
-            aspect-ratio: 16 / 10;
-            border-radius: 0;
-        }
-
-        .sk-pill {
-            display: inline-block;
-            width: 64px;
-            height: 22px;
-            border-radius: 999px;
-            margin-right: 6px;
-        }
-
-        .sk-button {
-            height: 38px;
-            border-radius: 12px;
-        }
-
-        #navProgress {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 2000;
-            height: 3px;
-            width: 0;
-            background: var(--gradient);
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
-            opacity: 0;
-            transition: width 8s cubic-bezier(0.1, 0.7, 0.2, 1), opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        #navProgress.is-active {
-            width: 85%;
-            opacity: 1;
-        }
-
-        .btn-spinner {
-            display: inline-block;
-            width: 1em;
-            height: 1em;
-            margin-right: 0.5em;
-            vertical-align: -0.125em;
-            border: 2px solid currentColor;
-            border-right-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* ---------- Project cards ---------- */
-
-        .project-card {
-            overflow: hidden;
-        }
-
-        /* Cards that are mostly image don't need the frosted-glass blur. Blurring behind large
-           images is costly on phones, and Chrome can fail to paint an image beneath it. */
-        .project-card,
-        .project-gallery,
-        .certificate-card {
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-            background: rgba(15, 23, 42, 0.88);
-        }
-
-        .project-card-media {
-            position: relative;
-            display: block;
-            aspect-ratio: 16 / 10;
-            border-bottom: 1px solid var(--border);
-            overflow: hidden;
-        }
-
-        .project-card-media .skeleton-media {
-            width: 100%;
-            height: 100%;
-        }
-
-        .project-card-media img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: opacity 0.4s ease, transform 0.5s ease;
-        }
-
-        .project-card:hover .project-card-media img {
-            transform: scale(1.04);
-        }
-
-        .project-card-placeholder {
-            display: grid;
-            place-items: center;
-            width: 100%;
-            height: 100%;
-            color: var(--violet-soft);
-            background:
-                radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.3), transparent 60%),
-                radial-gradient(circle at 80% 90%, rgba(37, 99, 235, 0.25), transparent 60%),
-                rgba(2, 4, 12, 0.5);
-        }
-
-        .project-card-placeholder .icon {
-            width: 40px;
-            height: 40px;
-            opacity: 0.7;
-        }
-
-        .live-badge,
-        .image-count-badge {
-            position: absolute;
-            top: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 3px 10px;
-            border-radius: 999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            background: rgba(5, 8, 22, 0.75);
-            border: 1px solid var(--border-strong);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-        }
-
-        .live-badge {
-            left: 12px;
-            color: #bbf7d0;
-            letter-spacing: 0.04em;
-        }
-
-        .image-count-badge {
-            right: 12px;
-            color: var(--text-soft);
-        }
-
-        .live-dot {
-            position: relative;
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #22c55e;
-            flex-shrink: 0;
-        }
-
-        .live-dot::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background: #22c55e;
-            animation: pulse 1.8s ease-out infinite;
-        }
-
-        @keyframes pulse {
-            to {
-                transform: scale(2.6);
-                opacity: 0;
-            }
-        }
-
-        .stretched-title {
-            color: #ffffff;
-            text-decoration: none;
-        }
-
-        .stretched-title:hover {
-            color: var(--violet-pale);
-        }
-
-        .project-card-description {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .project-description {
-            white-space: pre-line;
-            line-height: 1.75;
-        }
-
-        .project-layout {
-            display: grid;
-            gap: 24px;
-            grid-template-columns: minmax(0, 1fr);
-            grid-template-areas:
-                "gallery"
-                "sidebar"
-                "about";
-        }
-
-        .project-layout-gallery {
-            grid-area: gallery;
-        }
-
-        .project-layout-sidebar {
-            grid-area: sidebar;
-        }
-
-        .project-layout-about {
-            grid-area: about;
-        }
-
-        @media (min-width: 992px) {
-            .project-layout {
-                grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-                grid-template-rows: auto 1fr;
-                grid-template-areas:
-                    "gallery sidebar"
-                    "about sidebar";
-                align-items: start;
-            }
-
-            .project-sidebar {
-                position: sticky;
-                top: 100px;
-            }
-        }
-
-        .sidebar-label {
-            margin-bottom: 10px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            font-family: inherit;
-        }
-
-        /* ---------- Demo accounts ---------- */
-
-        .demo-rows {
-            display: grid;
-            gap: 10px;
-        }
-
-        .demo-rows:not(:empty) {
-            margin-bottom: 12px;
-        }
-
-        .demo-row {
-            display: grid;
-            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) minmax(0, 1fr) auto;
-            align-items: end;
-            gap: 10px;
-            padding: 12px;
-            border: 1px solid var(--border-strong);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .demo-row-remove {
-            width: 40px;
-            height: 38px;
-            padding: 0;
-            font-size: 1.25rem;
-            line-height: 1;
-        }
-
-        @media (max-width: 767.98px) {
-            .demo-row {
-                grid-template-columns: minmax(0, 1fr) auto;
-            }
-
-            .demo-row-label {
-                grid-column: 1 / 2;
-            }
-
-            .demo-row-field:not(.demo-row-label) {
-                grid-column: 1 / -1;
-            }
-
-            /* Remove button sits beside the Role field */
-            .demo-row-remove {
-                grid-column: 2;
-                grid-row: 1;
-            }
-        }
-
-        .demo-account {
-            padding: 12px;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 12px;
-            background: rgba(139, 92, 246, 0.07);
-        }
-
-        .demo-account+.demo-account {
-            margin-top: 10px;
-        }
-
-        .demo-account-label {
-            margin-bottom: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--violet-pale);
-        }
-
-        .demo-account-row {
-            display: grid;
-            grid-template-columns: 70px minmax(0, 1fr) auto;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .demo-account-row+.demo-account-row {
-            margin-top: 6px;
-        }
-
-        .demo-account-key {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .demo-account-value {
-            overflow-wrap: anywhere;
-            padding: 4px 8px;
-            border-radius: 6px;
-            background: rgba(2, 4, 12, 0.55);
-            color: #e2e8f0;
-            font-size: 0.82rem;
-        }
-
-        .demo-copy {
-            position: relative;
-            display: grid;
-            place-items: center;
-            width: 32px;
-            height: 32px;
-            border: 1px solid var(--border-strong);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-soft);
-            transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
-        }
-
-        .demo-copy:hover {
-            color: #ffffff;
-            border-color: rgba(139, 92, 246, 0.6);
-        }
-
-        .demo-copy .icon {
-            width: 15px;
-            height: 15px;
-        }
-
-        .demo-copy-done {
-            position: absolute;
-            right: calc(100% + 6px);
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            white-space: nowrap;
-            background: #16a34a;
-            color: #ffffff;
-            opacity: 0;
-            transform: translateX(4px);
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            pointer-events: none;
-        }
-
-        .demo-copy.is-copied {
-            color: #bbf7d0;
-            border-color: rgba(34, 197, 94, 0.6);
-        }
-
-        .demo-copy.is-copied .demo-copy-done {
-            opacity: 1;
-            transform: none;
-        }
-
-        @media (pointer: coarse) {
-            .demo-copy {
-                width: 40px;
-                height: 40px;
-            }
-        }
-
-        /* ---------- Home ---------- */
-
-        .hero {
-            min-height: 62vh;
-            padding: 24px 0 8px;
-        }
-
-        .hero-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            padding: 6px 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(139, 92, 246, 0.35);
-            background: rgba(139, 92, 246, 0.1);
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--violet-pale);
-        }
-
-        .hero-title {
-            line-height: 1.08;
-        }
-
-        .hero-lead {
-            max-width: 680px;
-        }
-
-        .home-section {
-            margin-top: 88px;
-        }
-
-        .section-heading {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .section-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-decoration: none;
-        }
-
-        .section-link .icon {
-            transition: transform 0.2s ease;
-        }
-
-        .section-link:hover .icon {
-            transform: translateX(3px);
-        }
-
-        .cta-panel {
-            position: relative;
-            overflow: hidden;
-            padding: 56px 24px;
-            border-radius: 24px;
-            border: 1px solid rgba(139, 92, 246, 0.35);
-            background:
-                radial-gradient(circle at 15% 0%, rgba(124, 58, 237, 0.45), transparent 55%),
-                radial-gradient(circle at 85% 100%, rgba(37, 99, 235, 0.4), transparent 55%),
-                rgba(15, 23, 42, 0.75);
-        }
-
-        .btn-light {
-            color: #1e1b4b;
-            font-weight: 600;
-        }
-
-        .btn-outline-light {
-            border-color: rgba(255, 255, 255, 0.35);
-        }
-
-        /* ---------- Technology picker ---------- */
-
-        .tech-group+.tech-group {
-            margin-top: 14px;
-        }
-
-        .tech-group-label {
-            margin-bottom: 8px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
-
-        .tech-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .tech-chip-input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .tech-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 999px;
-            border: 1px solid var(--border-strong);
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-soft);
-            font-size: 0.88rem;
-            cursor: pointer;
-            user-select: none;
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-        }
-
-        .tech-chip:hover {
-            border-color: rgba(139, 92, 246, 0.5);
-            color: #ffffff;
-        }
-
-        .tech-chip-input:checked+.tech-chip {
-            background: rgba(139, 92, 246, 0.2);
-            border-color: var(--violet-light);
-            color: #ffffff;
-        }
-
-        .tech-chip-input:checked+.tech-chip::before {
-            content: "\2713";
-            font-size: 0.8rem;
-            color: var(--violet-pale);
-        }
-
-        .tech-chip-input:focus-visible+.tech-chip {
-            box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.35);
-        }
-
-        .tech-empty {
-            padding: 14px 16px;
-            border: 1px dashed var(--border-strong);
-            border-radius: 12px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        /* ---------- Project images ---------- */
-
-        .project-cover {
-            aspect-ratio: 16 / 9;
-            object-fit: cover;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .project-gallery {
-            padding: 12px;
-        }
-
-        .project-gallery .carousel-item .skeleton-media {
-            aspect-ratio: 16 / 9;
-        }
-
-        .carousel-counter {
-            position: absolute;
-            right: 12px;
-            bottom: 12px;
-            padding: 3px 10px;
-            border-radius: 999px;
-            background: rgba(5, 8, 22, 0.75);
-            border: 1px solid var(--border-strong);
-            font-size: 0.78rem;
-            font-weight: 500;
-            color: var(--text-soft);
-            pointer-events: none;
-        }
-
-        .project-gallery .carousel-inner {
-            border-radius: calc(var(--radius) - 4px);
-            background: rgba(2, 4, 12, 0.6);
-        }
-
-        .project-gallery .carousel-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .project-gallery .carousel-control-prev,
-        .project-gallery .carousel-control-next {
-            width: 56px;
-        }
-
-        .project-gallery .carousel-control-prev-icon,
-        .project-gallery .carousel-control-next-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: rgba(5, 8, 22, 0.7);
-            background-size: 45%;
-            border: 1px solid var(--border-strong);
-        }
-
-        .gallery-thumbs {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            overflow-x: auto;
-            padding-bottom: 6px;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(139, 92, 246, 0.45) transparent;
-            -webkit-overflow-scrolling: touch;
-            scroll-snap-type: x proximity;
-        }
-
-        .gallery-thumbs button {
-            scroll-snap-align: start;
-        }
-
-        .gallery-thumbs button {
-            flex: 0 0 auto;
-            width: 88px;
-            height: 56px;
-            padding: 0;
-            border: 2px solid transparent;
-            border-radius: 10px;
-            overflow: hidden;
-            background: none;
-            opacity: 0.55;
-            transition: opacity 0.2s ease, border-color 0.2s ease;
-        }
-
-        .gallery-thumbs button:hover,
-        .gallery-thumbs button.active {
-            opacity: 1;
-        }
-
-        .gallery-thumbs button.active {
-            border-color: var(--violet-light);
-        }
-
-        .gallery-thumbs .skeleton-media,
-        .gallery-thumbs img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .upload-preview {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .upload-preview:not(:empty) {
-            margin-top: 10px;
-        }
-
-        .upload-preview-item {
-            position: relative;
-            width: 96px;
-            height: 72px;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid var(--border-strong);
-        }
-
-        .upload-preview-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .upload-preview-item.is-file {
-            display: grid;
-            place-items: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--violet-pale);
-            background: rgba(139, 92, 246, 0.12);
-        }
-
-        .upload-preview-tag {
-            position: absolute;
-            left: 4px;
-            bottom: 4px;
-            padding: 1px 6px;
-            border-radius: 999px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            background: var(--gradient);
-            color: #ffffff;
-        }
-
-        .image-manager {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 12px;
-        }
-
-        .image-tile {
-            border: 1px solid var(--border-strong);
-            border-radius: 12px;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .image-tile img {
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            object-fit: cover;
-            display: block;
-        }
-
-        .image-tile-actions {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 10px;
-            font-size: 0.85rem;
-        }
-
-        .image-tile:has(input[name="remove_images"]:checked) img {
-            opacity: 0.3;
-        }
-
-        /* ---------- Certificates ---------- */
-
-        .certificate-preview {
-            display: block;
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            padding: 0;
-            border: none;
-            border-bottom: 1px solid var(--border);
-            border-top-left-radius: calc(var(--radius) - 1px);
-            border-top-right-radius: calc(var(--radius) - 1px);
-            overflow: hidden;
-            background: rgba(2, 4, 12, 0.5);
-            cursor: zoom-in;
-        }
-
-        .certificate-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s ease;
-        }
-
-        .certificate-card:hover .certificate-preview img {
-            transform: scale(1.04);
-        }
-
-        .certificate-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            cursor: default;
-            color: var(--violet-soft);
-            background:
-                radial-gradient(circle at 30% 20%, rgba(124, 58, 237, 0.3), transparent 60%),
-                radial-gradient(circle at 80% 90%, rgba(37, 99, 235, 0.25), transparent 60%),
-                rgba(2, 4, 12, 0.5);
-        }
-
-        .certificate-placeholder svg {
-            width: 56px;
-            height: 56px;
-        }
-
-        .certificate-placeholder span {
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.14em;
-        }
-
-        .certificate-issuer {
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--violet-soft);
-        }
-
-        .modal-content {
-            background: var(--surface-strong);
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius);
-            color: var(--text);
-            backdrop-filter: blur(12px);
-        }
-
-        .modal-header {
-            border-bottom-color: var(--border);
-        }
-
-        .modal-content .btn-close {
-            filter: invert(1) grayscale(1) brightness(1.6);
-        }
-
-        .site-footer {
-            position: relative;
-            z-index: 1;
-            margin-top: 80px;
-            padding: 28px 0;
-            border-top: 1px solid var(--border);
-            font-size: 0.88rem;
-            color: var(--text-muted);
-        }
-
-        .site-footer a {
-            color: var(--text-soft);
-            text-decoration: none;
-        }
-
-        .site-footer a:hover {
-            color: var(--violet-pale);
-        }
-
-        /* ---------- Touch & small screens ---------- */
-
-        /* Finger-sized tap targets on touchscreens (phones and tablets) */
-        @media (pointer: coarse) {
-            .btn-sm {
-                min-height: 40px;
-                padding: 0.45rem 0.9rem;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .section-link,
-            .stretched-title,
-            .site-footer a,
-            a.small {
-                display: inline-flex;
-                align-items: center;
-                min-height: 40px;
-            }
-
-            .tech-chip {
-                min-height: 40px;
-                padding: 8px 16px;
-            }
-
-            .form-check {
-                min-height: 32px;
-                display: flex;
-                align-items: center;
-                gap: 0.4rem;
-            }
-
-            .gallery-thumbs button {
-                width: 96px;
-                height: 62px;
-            }
-        }
-
-        /* On touchscreens a tap triggers :hover and it stays stuck afterwards,
-           so the lift/zoom effects are only for devices with a real pointer */
-        @media (hover: none) {
-
-            .row .card.h-100:hover,
-            .btn-primary:hover,
-            .back-link:hover,
-            .brand:hover .brand-mark {
-                transform: none;
-            }
-
-            .project-card:hover .project-card-media img,
-            .certificate-card:hover .certificate-preview img {
-                transform: none;
-            }
-
-            .card:hover {
-                border-color: var(--border) !important;
-                box-shadow: none !important;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-
-            /* iOS zooms into any input with text smaller than 16px */
-            .nav-search .form-control,
-            .form-control,
-            .form-select {
-                font-size: 16px;
-            }
-
-            .site-header {
-                padding: 10px 10px 0;
-            }
-
-            .navbar {
-                padding: 6px 8px 6px 10px;
-            }
-
-            .brand-mark {
-                width: 34px;
-                height: 34px;
-                border-radius: 10px;
-            }
-
-            .brand-name {
-                font-size: 0.98rem;
-            }
-
-            .page-header {
-                padding-bottom: 24px;
-            }
-
-            .page-header h1 {
-                font-size: 2rem;
-            }
-
-            .back-link {
-                margin-top: 18px;
-                margin-bottom: 14px;
-            }
-
-            .hero {
-                min-height: 0;
-                padding-top: 8px;
-            }
-
-            .hero-title {
-                font-size: 2.35rem;
-            }
-
-            .hero .btn-lg,
-            .cta-panel .btn-lg {
-                flex: 1 1 auto;
-                justify-content: center;
-            }
-
-            .home-section {
-                margin-top: 64px;
-            }
-
-            .cta-panel {
-                padding: 40px 18px;
-                border-radius: 20px;
-            }
-
-            .card-body.p-4 {
-                padding: 1.15rem !important;
-            }
-
-            .image-manager {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 10px;
-            }
-
-            .image-tile-actions {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 4px;
-            }
-
-            .site-footer {
-                margin-top: 56px;
-                text-align: center;
-            }
-
-            .site-footer .d-flex.gap-3 {
-                flex-wrap: wrap;
-                justify-content: center;
-                column-gap: 18px !important;
-            }
-        }
-
-        /* Tablets: the collapsed menu has room for links side by side */
-        @media (min-width: 576px) and (max-width: 991.98px) {
-            .navbar-collapse .navbar-nav {
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-
-            .nav-actions {
-                flex-direction: row !important;
-                align-items: center !important;
-            }
-
-            .nav-actions .nav-search {
-                flex: 1;
-            }
-
-            .nav-actions .nav-cta {
-                min-height: 40px;
-                display: inline-flex;
-                align-items: center;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-
-            body,
-            body::before,
-            main>.container,
-            .skeleton::after,
-            .skeleton-media::after,
-            .live-dot::after {
-                animation: none;
-            }
-
-            * {
-                transition: none !important;
-            }
-        }
-    </style>
-
-    <title>{% block title %}MyPortfolio{% endblock %}</title>
+    <title>{% block title %}Portfolio{% endblock %} · James Figueroa</title>
 </head>
 
-<body>
+<body {% if session.get("user_id") %}data-admin{% endif %}>
 
-    {% set endpoint = request.endpoint or '' %}
+    {% set logged_in = session.get("user_id") %}
 
-    <header class="site-header" id="siteHeader">
-        <nav class="navbar navbar-expand-lg">
-            <div class="container-fluid px-0">
+    {% set files = {
+        'public.home': ('README.md', 'md', []),
+        'public.about': ('about.md', 'md', []),
+        'public.project_page': ('index.tsx', 'tsx', ['projects']),
+        'public.project_detail': ('project.md', 'md', ['projects']),
+        'public.search': ('search.sh', 'sh', ['projects']),
+        'public.skills_page': ('skills.json', 'json', []),
+        'public.certificates_page': ('certificates.yml', 'yml', []),
+        'public.contact': ('contact.sh', 'sh', []),
+        'auth.login': ('login.py', 'py', ['admin']),
+        'admin.dashboard': ('dashboard.py', 'py', ['admin']),
+        'admin.messages': ('messages.log', 'log', ['admin']),
+        'admin.appearance': ('theme.css', 'css', ['admin']),
+        'admin.profile': ('profile.json', 'json', ['admin']),
+        'admin.account': ('account.py', 'py', ['admin']),
+        'admin.add_testimonial': ('new_testimonial.py', 'py', ['admin', 'testimonials']),
+        'admin.edit_testimonial': ('edit_testimonial.py', 'py', ['admin', 'testimonials']),
+        'admin.add_project': ('new_project.py', 'py', ['admin', 'projects']),
+        'admin.edit_project': ('edit_project.py', 'py', ['admin', 'projects']),
+        'admin.add_skill': ('new_skill.py', 'py', ['admin', 'skills']),
+        'admin.edit_skill': ('edit_skill.py', 'py', ['admin', 'skills']),
+        'admin.add_certificate': ('new_certificate.py', 'py', ['admin', 'certificates']),
+        'admin.edit_certificate': ('edit_certificate.py', 'py', ['admin', 'certificates']),
+    } %}
+    {% set file = files.get(endpoint, ('404.txt', 'txt', [])) %}
 
-                <a class="brand" href="{{ url_for('public.home') }}" aria-label="Home">
-                    <span class="brand-mark">JF</span>
-                    <span class="brand-text">
-                        <span class="brand-name">My<span>Portfolio</span></span>
-                        <span class="brand-tag">James Figueroa</span>
-                    </span>
-                </a>
+    <a class="skip-link" href="#main">Skip to main content</a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+    <header class="titlebar" id="siteHeader">
 
-                <div class="collapse navbar-collapse" id="navbarContent">
+        <button class="icon-button d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#explorer"
+            aria-controls="explorer" aria-label="Open menu">
+            {{ icon('menu') }}
+        </button>
 
-                    <ul class="navbar-nav mx-lg-auto">
-                        <li class="nav-item">
-                            <a class="nav-link {% if endpoint == 'public.home' %}active{% endif %}"
-                                href="{{ url_for('public.home') }}">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if endpoint in ['public.project_page', 'public.project_detail'] %}active{% endif %}"
-                                href="{{ url_for('public.project_page') }}">Projects</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if endpoint == 'public.skills_page' %}active{% endif %}"
-                                href="{{ url_for('public.skills_page') }}">Skills</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if endpoint == 'public.certificates_page' %}active{% endif %}"
-                                href="{{ url_for('public.certificates_page') }}">Certificates</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if endpoint == 'public.contact' %}active{% endif %}"
-                                href="{{ url_for('public.contact') }}">Contact</a>
-                        </li>
-                    </ul>
+        <span class="window-dots d-none d-lg-inline-flex" aria-hidden="true"><span></span><span></span><span></span></span>
 
-                    <div class="nav-actions d-flex align-items-center gap-2">
+        <a class="brand" href="{{ url_for('public.home') }}" aria-label="James Figueroa, home">
+            <span class="brand-mark" aria-hidden="true">&lt;JF/&gt;</span>
+            <span class="brand-name d-none d-sm-inline">james<span>.figueroa</span></span>
+        </a>
 
-                        <form class="nav-search" role="search" method="GET" action="{{ url_for('public.search') }}">
-                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="11" cy="11" r="7"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
+        <form class="command-search" role="search" method="GET" action="{{ url_for('public.search') }}">
+            {{ icon('search', 'icon search-icon') }}
+            <input class="form-control" type="search" name="q" id="searchInput" placeholder="Search projects..."
+                aria-label="Search projects" autocomplete="off" aria-keyshortcuts="/"
+                value="{{ request.args.get('q', '') if endpoint == 'public.search' else '' }}">
+            <kbd class="d-none d-md-inline" aria-hidden="true">/</kbd>
+            <button class="search-submit visually-hidden-focusable" type="submit">Search</button>
+        </form>
 
-                            <input class="form-control" type="search" name="q" id="searchInput"
-                                placeholder="Search projects..." aria-label="Search" autocomplete="off"
-                                value="{{ request.args.get('q', '') if endpoint == 'public.search' else '' }}">
+        <div class="titlebar-actions">
+            <button class="palette-trigger d-none d-md-inline-flex" type="button" data-open-palette
+                aria-keyshortcuts="Control+K Meta+K" aria-label="Open command palette (Ctrl+K)">
+                {{ icon('command') }}<kbd aria-hidden="true">Ctrl K</kbd>
+            </button>
 
-                            <button class="search-submit" type="submit" aria-label="Search">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <polyline points="12 5 19 12 12 19"></polyline>
-                                </svg>
-                            </button>
+            {% with picker_id = "main" %}{% include "_theme_picker.html" %}{% endwith %}
 
-                            <div id="searchResults" class="position-absolute shadow-sm w-100"
-                                style="top: 100%; left: 0; z-index: 1000; display: none;"></div>
-                        </form>
-
-                        {% if session.get("user_id") %}
-                        <a class="btn btn-primary nav-cta" href="{{ url_for('admin.dashboard') }}">Dashboard</a>
-                        {% else %}
-                        <a class="btn btn-outline-secondary nav-cta" href="{{ url_for('auth.login') }}">Login</a>
-                        {% endif %}
-
-                    </div>
-
-                </div>
-            </div>
-        </nav>
+            {% if logged_in %}
+            <a class="btn btn-primary btn-sm d-none d-md-inline-flex" href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            {% else %}
+            <a class="btn btn-outline-secondary btn-sm d-none d-md-inline-flex" href="{{ url_for('auth.login') }}">Login</a>
+            {% endif %}
+        </div>
     </header>
 
     <div id="navProgress"></div>
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+    <div class="workbench">
 
-    {# Placeholder page shown while the next page loads (see the navigation script below) #}
-    <div class="page-skeleton" aria-hidden="true">
-        <div class="container">
+        <nav class="explorer offcanvas-lg offcanvas-start" id="explorer" tabindex="-1" aria-label="Main">
 
-            <div class="skeleton sk-back"></div>
-            <div class="skeleton sk-eyebrow"></div>
-            <div class="skeleton sk-title"></div>
-            <div class="skeleton sk-line mb-5" style="width: min(420px, 85%);"></div>
+            <div class="offcanvas-header d-lg-none">
+                <span class="explorer-heading mb-0">Explorer</span>
+                <button type="button" class="icon-button" data-bs-dismiss="offcanvas" data-bs-target="#explorer"
+                    aria-label="Close menu">{{ icon('x') }}</button>
+            </div>
 
-            <div class="sk-layout sk-grid row g-4">
-                {% for _ in range(3) %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 overflow-hidden">
-                        <div class="skeleton sk-media"></div>
-                        <div class="card-body">
-                            <div class="skeleton sk-line" style="width: 60%; height: 18px;"></div>
-                            <div class="skeleton sk-line"></div>
-                            <div class="skeleton sk-line" style="width: 80%;"></div>
-                            <div class="mt-3"><span class="skeleton sk-pill"></span><span
-                                    class="skeleton sk-pill"></span></div>
+            <div class="explorer-body">
+
+                <p class="explorer-heading d-none d-lg-block">Explorer</p>
+
+                <p class="tree-root">{{ icon('chevron-down') }} portfolio</p>
+
+                {% macro file_link(target, label, lang, endpoints, folder=False, current=endpoint) -%}
+                {% set active = current in endpoints %}
+                <li>
+                    <a class="file-link {% if active %}active{% endif %}" href="{{ target }}"
+                        {% if active %}aria-current="page" {% endif %}>
+                        {% if folder %}
+                        <span class="file-icon is-folder" aria-hidden="true">{{ icon('folder') }}</span>
+                        {% else %}
+                        <span class="file-icon" data-lang="{{ lang }}" aria-hidden="true">{{ lang }}</span>
+                        {% endif %}
+                        {{ label }}
+                    </a>
+                </li>
+                {%- endmacro %}
+
+                <ul class="file-tree">
+                    {{ file_link(url_for('public.home'), 'README.md', 'md', ['public.home']) }}
+                    {{ file_link(url_for('public.about'), 'about.md', 'md', ['public.about']) }}
+                    {{ file_link(url_for('public.project_page'), 'projects', 'dir', ['public.project_page', 'public.project_detail', 'public.search'], folder=True) }}
+                    {{ file_link(url_for('public.skills_page'), 'skills.json', 'json', ['public.skills_page']) }}
+                    {{ file_link(url_for('public.certificates_page'), 'certificates.yml', 'yml', ['public.certificates_page']) }}
+                    {{ file_link(url_for('public.contact'), 'contact.sh', 'sh', ['public.contact']) }}
+                </ul>
+
+                <p class="tree-root mt-3">{{ icon('chevron-down') }} admin</p>
+
+                <ul class="file-tree">
+                    {% if logged_in %}
+                    {{ file_link(url_for('admin.dashboard'), 'dashboard.py', 'py', ['admin.dashboard', 'admin.add_project', 'admin.edit_project', 'admin.add_skill', 'admin.edit_skill', 'admin.add_certificate', 'admin.edit_certificate', 'admin.add_testimonial', 'admin.edit_testimonial']) }}
+                    {{ file_link(url_for('admin.profile'), 'profile.json', 'json', ['admin.profile']) }}
+                    {{ file_link(url_for('admin.messages'), 'messages.log', 'log', ['admin.messages']) }}
+                    {{ file_link(url_for('admin.appearance'), 'theme.css', 'css', ['admin.appearance']) }}
+                    {{ file_link(url_for('admin.account'), 'account.py', 'py', ['admin.account']) }}
+                    <li>
+                        <form method="POST" action="{{ url_for('auth.logout') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="file-link">
+                                <span class="file-icon is-folder" aria-hidden="true">{{ icon('logout') }}</span>
+                                logout
+                            </button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a class="file-link {% if endpoint == 'auth.login' %}active{% endif %}" href="{{ url_for('auth.login') }}"
+                            {% if endpoint == 'auth.login' %}aria-current="page" {% endif %}>
+                            <span class="file-icon is-folder" aria-hidden="true">{{ icon('lock') }}</span>
+                            login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <button type="button" class="file-link palette-link mt-3" data-open-palette>
+                    <span class="file-icon is-folder" aria-hidden="true">{{ icon('command') }}</span>
+                    command palette
+                </button>
+
+                <div class="explorer-card">
+                    <p class="explorer-card-name">{{ profile.full_name }}</p>
+                    <p class="explorer-card-role">{{ profile.headline }}</p>
+
+                    {% if profile.social_links or profile.email or profile.cv_file %}
+                    <ul class="social-icons">
+                        {% for label, url, glyph in profile.social_links %}
+                        <li><a href="{{ url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ label }} (opens in a new tab)" title="{{ label }}">{{ icon(glyph) }}</a></li>
+                        {% endfor %}
+                        {% if profile.email %}
+                        <li><a href="mailto:{{ profile.email }}" aria-label="Email {{ profile.email }}" title="Email">{{ icon('mail') }}</a></li>
+                        {% endif %}
+                        {% if profile.cv_file %}
+                        <li><a href="{{ url_for('public.cv', download=1) }}" aria-label="Download CV" title="Download CV">{{ icon('download') }}</a></li>
+                        {% endif %}
+                    </ul>
+                    {% endif %}
+
+                    <a href="{{ url_for('public.contact') }}" class="btn btn-primary btn-sm w-100 btn-icon justify-content-center">
+                        {{ icon('mail') }} Get in Touch
+                    </a>
+                </div>
+
+            </div>
+        </nav>
+
+        <div class="editor">
+
+            <div class="editor-tabs">
+                <span class="editor-tab">
+                    <span class="file-icon" data-lang="{{ file[1] }}" aria-hidden="true">{{ file[1] }}</span>
+                    {% block tab_file %}{{ file[0] }}{% endblock %}
+                </span>
+                <nav class="breadcrumbs" aria-label="Breadcrumb">
+                    <ol>
+                        <li><a href="{{ url_for('public.home') }}">portfolio</a></li>
+                        {% for folder in file[2] %}
+                        <li>
+                            {% if folder == 'projects' and not endpoint.startswith('admin.') %}
+                            <a href="{{ url_for('public.project_page') }}">{{ folder }}</a>
+                            {% elif folder == 'admin' and logged_in %}
+                            <a href="{{ url_for('admin.dashboard') }}">{{ folder }}</a>
+                            {% else %}
+                            {{ folder }}
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                        <li aria-current="page">{{ self.tab_file() }}</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <main id="main" tabindex="-1">
+                {% include "_flashes.html" %}
+
+                {% block content %}
+                {% endblock %}
+            </main>
+
+            <div class="page-skeleton" aria-hidden="true">
+                <div class="container">
+
+                    <div class="skeleton sk-eyebrow"></div>
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-line mb-5" style="width: min(420px, 85%);"></div>
+
+                    <div class="sk-layout sk-grid row g-4">
+                        {% for _ in range(3) %}
+                        <div class="col-md-6 col-xxl-4">
+                            <div class="card h-100 overflow-hidden">
+                                <div class="skeleton sk-media"></div>
+                                <div class="card-body">
+                                    <div class="skeleton sk-line" style="width: 60%; height: 18px;"></div>
+                                    <div class="skeleton sk-line"></div>
+                                    <div class="skeleton sk-line" style="width: 80%;"></div>
+                                    <div class="mt-3"><span class="skeleton sk-pill"></span><span
+                                            class="skeleton sk-pill"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="sk-layout sk-detail row g-4">
+                        <div class="col-xl-8">
+                            <div class="card p-3">
+                                <div class="skeleton" style="aspect-ratio: 16 / 9;"></div>
+                            </div>
+                        </div>
+                        <div class="col-xl-4">
+                            <div class="card p-4">
+                                <div class="skeleton sk-button mb-2"></div>
+                                <div class="skeleton sk-button mb-4"></div>
+                                <div class="skeleton sk-line" style="width: 40%;"></div>
+                                <div><span class="skeleton sk-pill"></span><span class="skeleton sk-pill"></span></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                {% endfor %}
-            </div>
 
-            <div class="sk-layout sk-detail row g-4">
-                <div class="col-lg-8">
-                    <div class="card p-3">
-                        <div class="skeleton" style="aspect-ratio: 16 / 9;"></div>
+                    <div class="sk-layout sk-form row justify-content-center">
+                        <div class="col-md-10 col-xl-7">
+                            <div class="card p-4">
+                                {% for _ in range(3) %}
+                                <div class="skeleton sk-line" style="width: 25%;"></div>
+                                <div class="skeleton sk-button mb-4"></div>
+                                {% endfor %}
+                                <div class="skeleton sk-button"></div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card p-4">
-                        <div class="skeleton sk-button mb-2"></div>
-                        <div class="skeleton sk-button mb-4"></div>
-                        <div class="skeleton sk-line" style="width: 40%;"></div>
-                        <div><span class="skeleton sk-pill"></span><span class="skeleton sk-pill"></span></div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="sk-layout sk-form row justify-content-center">
-                <div class="col-md-8 col-lg-6">
-                    <div class="card p-4">
-                        {% for _ in range(3) %}
-                        <div class="skeleton sk-line" style="width: 25%;"></div>
-                        <div class="skeleton sk-button mb-4"></div>
-                        {% endfor %}
-                        <div class="skeleton sk-button"></div>
-                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <footer class="site-footer">
-        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-            <span>&copy; {{ current_year }} James Israel Figueroa. Built with Flask.</span>
-            <span class="d-flex gap-3">
-                <a href="{{ url_for('public.project_page') }}">Projects</a>
-                <a href="{{ url_for('public.skills_page') }}">Skills</a>
-                <a href="{{ url_for('public.certificates_page') }}">Certificates</a>
-                <a href="{{ url_for('public.contact') }}">Contact</a>
-            </span>
+    <footer class="statusbar">
+        <div class="statusbar-group">
+            <span class="status-item">{{ icon('branch') }} main</span>
+            <span class="status-item d-none d-sm-inline-flex">{{ icon('check') }} Flask + Supabase</span>
+        </div>
+        <div class="statusbar-group">
+            {% if profile.availability %}
+            <a class="status-item status-link d-none d-xl-inline-flex" href="{{ url_for('public.about') }}">
+                <span class="status-dot" aria-hidden="true"></span>{{ profile.availability }}
+            </a>
+            {% endif %}
+            <span class="status-item d-none d-md-inline-flex" data-status-theme></span>
+            <span class="status-item d-none d-md-inline-flex">UTF-8</span>
+            <span class="status-item">&copy; {{ current_year }} {{ profile.full_name }}</span>
         </div>
     </footer>
 
+    <dialog class="palette" id="commandPalette" aria-labelledby="paletteTitle"
+        data-source="{{ url_for('public.site_index') }}">
+        <h2 class="visually-hidden" id="paletteTitle">Command palette</h2>
+        <div class="palette-search">
+            <span class="palette-prompt" aria-hidden="true">&gt;</span>
+            <input type="text" id="paletteInput" role="combobox" aria-expanded="true" aria-controls="paletteList"
+                aria-autocomplete="list" autocomplete="off" spellcheck="false"
+                aria-label="Search pages, projects and commands" placeholder="Go to a page, project or command...">
+            <kbd aria-hidden="true">Esc</kbd>
+        </div>
+        <ul class="palette-list" id="paletteList" role="listbox" aria-label="Results"></ul>
+        <p class="palette-hint" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> navigate <kbd>Enter</kbd> open <kbd>Esc</kbd> close</p>
+        <p class="visually-hidden" id="paletteStatus" aria-live="polite"></p>
+    </dialog>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        (function () {
-            var header = document.getElementById("siteHeader");
-            function onScroll() {
-                header.classList.toggle("scrolled", window.scrollY > 10);
-            }
-            window.addEventListener("scroll", onScroll, { passive: true });
-            onScroll();
-        })();
-
-        // Close the collapsed (phone/tablet) menu when tapping outside it or pressing Escape
-        (function () {
-            var menu = document.getElementById("navbarContent");
-            var header = document.getElementById("siteHeader");
-
-            function close() {
-                if (menu.classList.contains("show")) {
-                    bootstrap.Collapse.getOrCreateInstance(menu, { toggle: false }).hide();
-                }
-            }
-
-            document.addEventListener("click", function (event) {
-                if (!header.contains(event.target)) close();
-            });
-
-            document.addEventListener("keydown", function (event) {
-                if (event.key === "Escape") close();
-            });
-        })();
-
-        // Copy buttons: <button data-copy="text">
-        document.addEventListener("click", function (event) {
-            var button = event.target.closest("[data-copy]");
-            if (!button) return;
-
-            function copied() {
-                button.classList.add("is-copied");
-                clearTimeout(button._copiedTimer);
-                button._copiedTimer = setTimeout(function () { button.classList.remove("is-copied"); }, 1500);
-            }
-
-            function selectFallback() {
-                // Clipboard blocked (e.g. not HTTPS): select the value so it can be copied by hand
-                var value = button.parentElement.querySelector("code");
-                if (!value) return;
-                var range = document.createRange();
-                range.selectNodeContents(value);
-                var selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }
-
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(button.dataset.copy).then(copied, selectFallback);
-            } else {
-                selectFallback();
-            }
-        });
-
-        // Fade images in over their shimmer placeholder once they've loaded
-        document.querySelectorAll("img[data-skeleton]").forEach(function (img) {
-            var frame = img.closest(".skeleton-media");
-            if (!frame) return;
-
-            function done() {
-                frame.classList.add("is-loaded");
-                if (!img.naturalWidth) frame.classList.add("is-broken");
-            }
-
-            if (img.complete) {
-                done();
-            } else {
-                img.addEventListener("load", done, { once: true });
-                img.addEventListener("error", done, { once: true });
-            }
-        });
-
-        // Page skeleton + progress bar while the next page loads. Pages render on the
-        // server, so a slow response (e.g. a cold start) would otherwise look frozen.
-        (function () {
-            var progress = document.getElementById("navProgress");
-            var timer = null;
-
-            function skeletonFor(url) {
-                if (/^\/projects\/\d+/.test(url.pathname)) return "detail";
-                if (/^\/(contact|login)|\/(add|edit)-/.test(url.pathname)) return "form";
-                return "grid";
-            }
-
-            function start(url) {
-                progress.classList.add("is-active");
-                clearTimeout(timer);
-                // Only swap in the skeleton if the page doesn't arrive almost immediately
-                timer = setTimeout(function () {
-                    document.body.dataset.skeleton = skeletonFor(url);
-                    document.body.classList.add("is-navigating");
-                    window.scrollTo(0, 0);
-                }, 150);
-            }
-
-            function reset() {
-                clearTimeout(timer);
-                document.body.classList.remove("is-navigating");
-                progress.classList.remove("is-active");
-                document.querySelectorAll("[data-original-html]").forEach(function (button) {
-                    button.innerHTML = button.dataset.originalHtml;
-                    button.removeAttribute("data-original-html");
-                    button.disabled = false;
-                });
-            }
-
-            document.addEventListener("click", function (event) {
-                if (event.defaultPrevented || event.button !== 0 ||
-                    event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-                var link = event.target.closest("a[href]");
-                if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
-
-                var url = new URL(link.href, location.href);
-                if (url.origin !== location.origin) return;
-                if (url.pathname === location.pathname && url.search === location.search) return;
-
-                start(url);
-            });
-
-            document.addEventListener("submit", function (event) {
-                if (event.defaultPrevented) return;  // e.g. a cancelled "Are you sure?" confirm
-
-                var form = event.target;
-                var button = event.submitter || form.querySelector("[type=submit]");
-
-                if (form.method.toLowerCase() === "get") {
-                    start(new URL(form.action, location.href));
-                    return;
-                }
-
-                progress.classList.add("is-active");
-
-                if (button && !button.classList.contains("search-submit")) {
-                    var label = button.dataset.loadingText;
-                    if (!label) {
-                        var hasFiles = Array.from(form.querySelectorAll("input[type=file]"))
-                            .some(function (input) { return input.files.length > 0; });
-                        var text = button.textContent.trim().toLowerCase();
-                        label = hasFiles ? "Uploading..." :
-                            text.startsWith("delete") ? "Deleting..." :
-                                text.startsWith("login") || text.startsWith("sign in") ? "Signing in..." : "Saving...";
-                    }
-                    button.dataset.originalHtml = button.innerHTML;
-                    button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>' + label;
-                    // Disable after the submit has gone out, so the button's own name/value is still sent
-                    setTimeout(function () { button.disabled = true; }, 0);
-                }
-            });
-
-            // Coming back with the browser's Back button can restore this page from cache mid-load
-            window.addEventListener("pageshow", function (event) {
-                if (event.persisted) reset();
-            });
-        })();
-
-        // Thumbnail previews for any <input type="file" data-preview="elementId">
-        document.querySelectorAll("input[type=file][data-preview]").forEach(function (input) {
-            var preview = document.getElementById(input.dataset.preview);
-            var urls = [];
-
-            input.addEventListener("change", function () {
-                urls.forEach(URL.revokeObjectURL);
-                urls = [];
-                preview.replaceChildren();
-
-                Array.from(input.files).forEach(function (file, index) {
-                    var item = document.createElement("div");
-                    item.className = "upload-preview-item";
-
-                    if (file.type.startsWith("image/")) {
-                        var url = URL.createObjectURL(file);
-                        urls.push(url);
-                        var img = document.createElement("img");
-                        img.src = url;
-                        img.alt = file.name;
-                        item.appendChild(img);
-                    } else {
-                        item.classList.add("is-file");
-                        item.textContent = file.name.split(".").pop().toUpperCase();
-                    }
-
-                    if (index === 0 && input.multiple) {
-                        var tag = document.createElement("span");
-                        tag.className = "upload-preview-tag";
-                        tag.textContent = "Cover";
-                        item.appendChild(tag);
-                    }
-
-                    preview.appendChild(item);
-                });
-            });
-        });
-    </script>
+    <script src="{{ asset_url('js/main.js') }}"></script>
 
     {% block scripts %}
     {% endblock %}

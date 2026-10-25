@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Profile & CV{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <a href="{{ url_for('admin.dashboard') }}" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to dashboard)</span></a>
+
+    <header class="page-header">
+        <p class="eyebrow">admin</p>
+        <h1 class="mb-2">Profile &amp; CV</h1>
+        <p class="text-muted mb-0">
+            Shown on the <a href="{{ url_for('public.about') }}">About page</a>, in the sidebar and in link previews.
+            Blank fields fall back to the defaults.
+        </p>
+    </header>
+
+    {% if not table_ready %}
+    <div class="alert alert-warning">
+        The profile table doesn't exist yet. Run <code>supabase/schema.sql</code> again in the
+        Supabase SQL Editor (it's safe to re-run), then reload this page.
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body p-4">
+
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <fieldset class="form-section">
+                    <legend class="form-section-title">About you</legend>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="full_name" class="form-label">Full name</label>
+                            <input type="text" class="form-control" id="full_name" name="full_name" maxlength="100"
+                                value="{{ saved.full_name or '' }}" placeholder="{{ profile.full_name }}" autocomplete="name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="headline" class="form-label">Headline</label>
+                            <input type="text" class="form-control" id="headline" name="headline" maxlength="150"
+                                value="{{ saved.headline or '' }}" placeholder="e.g. BSIT student & aspiring web developer">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="availability" class="form-label">Looking for</label>
+                            <input type="text" class="form-control" id="availability" name="availability" maxlength="150"
+                                value="{{ saved.availability or '' }}" placeholder="e.g. Open to OJT / internship (2026)"
+                                aria-describedby="availabilityHelp">
+                            <div class="form-text" id="availabilityHelp">Shown as a status on the About page and in the status bar.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" maxlength="100"
+                                value="{{ saved.location or '' }}" placeholder="e.g. Iloilo City, Philippines">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="7" maxlength="5000"
+                            aria-describedby="bioHelp" placeholder="{{ profile.bio }}">{{ saved.bio or '' }}</textarea>
+                        <div class="form-text" id="bioHelp">Leave a blank line between paragraphs.</div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend class="form-section-title">Contact &amp; links</legend>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Public email</label>
+                            <input type="email" class="form-control" id="email" name="email" maxlength="255"
+                                value="{{ saved.email or '' }}" placeholder="you@example.com" autocomplete="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="github_url" class="form-label">GitHub</label>
+                            <input type="url" class="form-control" id="github_url" name="github_url" maxlength="255"
+                                value="{{ saved.github_url or '' }}" placeholder="https://github.com/username">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="linkedin_url" class="form-label">LinkedIn</label>
+                            <input type="url" class="form-control" id="linkedin_url" name="linkedin_url" maxlength="255"
+                                value="{{ saved.linkedin_url or '' }}" placeholder="https://www.linkedin.com/in/username">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="website_url" class="form-label">Other website</label>
+                            <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
+                                value="{{ saved.website_url or '' }}" placeholder="https://...">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend class="form-section-title">CV / résumé</legend>
+
+                    {% if saved.cv_file %}
+                    <p class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        {{ icon('file') }} A CV is uploaded.
+                        <a href="{{ url_for('public.cv') }}" target="_blank" rel="noopener">View current CV</a>
+                    </p>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="remove_cv" name="remove_cv" value="1">
+                        <label class="form-check-label" for="remove_cv">Remove the current CV</label>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="cv" class="form-label">{{ 'Replace with a new PDF' if saved.cv_file else 'Upload a PDF' }}</label>
+                        <input type="file" class="form-control" id="cv" name="cv" accept=".pdf,application/pdf"
+                            aria-describedby="cvHelp">
+                        <div class="form-text" id="cvHelp">
+                            Visitors get it at <code>{{ url_for('public.cv', _external=True) }}</code>, which stays the same when you replace the file.
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

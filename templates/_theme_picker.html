@@ -1,0 +1,37 @@
+{% from "_icons.html" import icon %}
+<div class="dropdown" data-theme-picker>
+    <button class="theme-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+        aria-expanded="false" aria-label="Theme and accent colour" id="themeToggle-{{ picker_id }}">
+        <span class="theme-icon-light">{{ icon('sun') }}</span>
+        <span class="theme-icon-dark">{{ icon('moon') }}</span>
+    </button>
+
+    <div class="dropdown-menu dropdown-menu-end theme-menu" aria-labelledby="themeToggle-{{ picker_id }}">
+
+        <fieldset class="picker-group">
+            <legend class="picker-label">Appearance</legend>
+            <div class="segmented">
+                {% for value, label, glyph in [('light', 'Light', 'sun'), ('dark', 'Dark', 'moon'), ('system', 'System', 'monitor')] %}
+                <input type="radio" name="themeMode-{{ picker_id }}" id="mode-{{ picker_id }}-{{ value }}"
+                    value="{{ value }}" data-theme-mode>
+                <label for="mode-{{ picker_id }}-{{ value }}">{{ icon(glyph) }}{{ label }}</label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <fieldset class="picker-group">
+            <legend class="picker-label">Accent colour</legend>
+            <div class="swatches">
+                {% for accent in theme_accents %}
+                <input type="radio" name="themeAccent-{{ picker_id }}" id="accent-{{ picker_id }}-{{ accent }}"
+                    value="{{ accent }}" data-theme-accent>
+                <label for="accent-{{ picker_id }}-{{ accent }}" data-swatch="{{ accent }}" title="{{ accent | capitalize }}">
+                    {{ icon('check') }}<span class="visually-hidden">{{ accent | capitalize }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <p class="picker-note">Saved on this device.</p>
+    </div>
+</div>

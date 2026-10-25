@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Appearance{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <a href="{{ url_for('admin.dashboard') }}" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to dashboard)</span></a>
+
+    <header class="page-header">
+        <p class="eyebrow">admin</p>
+        <h1 class="mb-2">Appearance</h1>
+        <p class="text-muted mb-0">
+            Choose what first-time visitors see. Visitors can still switch theme and accent
+            from the <span class="text-nowrap">{{ icon('palette') }} button</span> in the navigation; their choice is saved on their device.
+        </p>
+    </header>
+
+    <div class="card">
+        <div class="card-body p-4">
+
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <fieldset class="mb-4">
+                    <legend class="form-label fw-semibold mb-2">Default theme</legend>
+                    <div class="appearance-options">
+                        {% for value, label, glyph, hint in [
+                            ('system', 'System', 'monitor', "Follows the visitor's device"),
+                            ('dark', 'Dark', 'moon', 'Always dark'),
+                            ('light', 'Light', 'sun', 'Always light'),
+                        ] %}
+                        <div class="appearance-option">
+                            <input type="radio" name="theme" id="theme-{{ value }}" value="{{ value }}"
+                                {% if settings.theme == value %}checked{% endif %} data-preview-mode>
+                            <label for="theme-{{ value }}">
+                                {{ icon(glyph) }}
+                                <span>
+                                    <span class="d-block">{{ label }}</span>
+                                    <span class="d-block small text-muted fw-normal">{{ hint }}</span>
+                                </span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend class="form-label fw-semibold mb-2">Default accent colour</legend>
+                    <div class="appearance-options">
+                        {% for accent in theme_accents %}
+                        <div class="appearance-option">
+                            <input type="radio" name="accent" id="default-accent-{{ accent }}" value="{{ accent }}"
+                                {% if settings.accent == accent %}checked{% endif %} data-preview-accent>
+                            <label for="default-accent-{{ accent }}">
+                                <span class="swatch-dot" data-swatch="{{ accent }}" aria-hidden="true"></span>
+                                {{ accent | capitalize }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-text">Every accent is checked for readable contrast in both light and dark mode.</div>
+                </fieldset>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">Save Defaults</button>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var root = document.documentElement;
+        var media = window.matchMedia("(prefers-color-scheme: dark)");
+        document.addEventListener("change", function (event) {
+            var input = event.target;
+            if (input.matches("[data-preview-accent]")) {
+                root.dataset.accent = input.value;
+            } else if (input.matches("[data-preview-mode]")) {
+                var dark = input.value === "dark" || (input.value === "system" && media.matches);
+                root.setAttribute("data-bs-theme", dark ? "dark" : "light");
+            }
+        });
+    })();
+</script>
+{% endblock %}

@@ -4,39 +4,23 @@
 
 {% block content %}
 
-<div class="container py-5">
+<div class="container">
 
-    <div class="mb-4">
-        <h1 class="fw-bold mb-1">Edit Certificate</h1>
-        <p class="text-muted">
-            Update the information for your certificate.
-        </p>
-    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to dashboard)</span></a>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
+    <header class="page-header">
+        <p class="eyebrow">admin</p>
+        <h1 class="fw-bold mb-2">Edit Certificate</h1>
+        <p class="text-muted mb-0">Update the information for your certificate.</p>
+    </header>
 
-    {% for category, message in messages %}
-
-    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-
-        {{ message }}
-
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-        </button>
-
-    </div>
-
-    {% endfor %}
-
-    {% endif %}
-    {% endwith %}
 
     <div class="card shadow-sm border-0">
 
         <div class="card-body p-4">
 
             <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 {% include "_certificate_form.html" %}
 

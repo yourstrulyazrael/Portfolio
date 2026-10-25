@@ -1,76 +1,138 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
 
-{% block title %}Homepage{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
 
-<div class="container py-5">
+<div class="container">
 
-    <section class="hero row align-items-center">
+    <section class="hero" aria-labelledby="heroTitle">
 
-        <div class="col-lg-9">
-
-            <p class="hero-pill">
-                <span class="live-dot"></span>
-                Welcome to my portfolio
+        <div>
+            <p class="hero-comment">
+                <span class="live-dot" aria-hidden="true"></span>// hello, world: welcome to my portfolio
             </p>
 
-            <h1 class="display-3 fw-bold mb-3 hero-title">
+            <h1 class="hero-title" id="heroTitle">
                 Hi, I'm
-                <span class="text-primary">James Israel Figueroa</span>
-                a BSIT student passionate about technology.
+                <span class="text-primary">{{ profile.full_name }}</span>
             </h1>
 
-            <p class="lead text-muted mb-4 hero-lead">
-                I'm an aspiring IT professional building my skills in
-                software development, web development, databases, and
-                cybersecurity. This portfolio showcases the projects
-                I've built and the technologies I'm currently learning.
+            <p class="hero-role">
+                <span class="kw">const</span> role = <span class="str">"{{ profile.headline }}"</span>;
             </p>
 
-            <div class="d-flex gap-2 flex-wrap">
+            <p class="hero-lead">{{ profile.bio_paragraphs[0] if profile.bio_paragraphs else '' }}</p>
 
+            <div class="d-flex gap-2 flex-wrap">
                 <a href="{{ url_for('public.project_page') }}" class="btn btn-primary btn-lg btn-icon">
                     View My Projects {{ icon('arrow-right') }}
                 </a>
-
-                <a href="{{ url_for('public.skills_page') }}" class="btn btn-outline-secondary btn-lg">
-                    My Skills
+                <a href="{{ url_for('public.contact') }}" class="btn btn-outline-secondary btn-lg btn-icon">
+                    {{ icon('mail') }} Get in Touch
                 </a>
-
             </div>
 
+            <dl class="hero-stats">
+                <div class="hero-stat">
+                    <dt>projects</dt>
+                    <dd>{{ stats.projects }}</dd>
+                </div>
+                <div class="hero-stat">
+                    <dt>skills</dt>
+                    <dd>{{ stats.skills }}</dd>
+                </div>
+                <div class="hero-stat">
+                    <dt>certificates</dt>
+                    <dd>{{ stats.certificates }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="window terminal" id="terminal" data-source="{{ url_for('public.site_index') }}">
+            <div class="window-bar">
+                <span class="browser-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="window-title">james@portfolio: ~</span>
+            </div>
+            <div class="terminal-scroll" id="terminalScroll">
+<pre class="terminal-body terminal-intro" aria-hidden="true"><span class="prompt">james@portfolio</span>:<span class="prompt-path">~</span>$ whoami
+<span class="out">{{ profile.full_name }} · {{ profile.headline }}</span>
+
+<span class="prompt">james@portfolio</span>:<span class="prompt-path">~</span>$ ls skills/
+<span class="out">{% for name in skill_names[:8] %}{{ name }}{{ '  ' if not loop.last }}{% endfor %}{% if skill_names | length > 8 %}  +{{ skill_names | length - 8 }} more{% endif %}{% if not skill_names %}(learning...){% endif %}</span>
+
+<span class="prompt">james@portfolio</span>:<span class="prompt-path">~</span>$ git log --oneline -3
+{% for project in featured_projects %}<span class="hash">{{ '%07x' | format(project.id * 2654435761 % 268435456) }}</span> <span class="out">feat: ship {{ project.title }}</span>
+{% else %}<span class="out">nothing to show yet</span>
+{% endfor %}
+<span class="out">Type </span><span class="hl">help</span><span class="out"> to explore. Try </span><span class="hl">projects</span><span class="out"> or </span><span class="hl">theme light</span><span class="out">.</span></pre>
+                <div class="terminal-log" id="terminalLog" role="log" aria-live="polite"></div>
+                <form class="terminal-input-row" id="terminalForm" autocomplete="off">
+                    <label for="terminalInput" class="terminal-prompt">
+                        <span class="visually-hidden">Terminal command (type help for a list)</span>
+                        <span aria-hidden="true"><span class="prompt">james@portfolio</span>:<span class="prompt-path">~</span>$</span>
+                    </label>
+                    <input type="text" id="terminalInput" class="terminal-input" spellcheck="false"
+                        autocapitalize="off" enterkeyhint="send" maxlength="120">
+                </form>
+            </div>
         </div>
 
     </section>
 
 
-    <section id="skills" class="home-section">
+    {% if featured_projects %}
+    <section class="home-section" aria-labelledby="featuredTitle">
 
         <div class="section-heading">
             <div>
-                <h2 class="fw-bold mb-1">What I Work With</h2>
-                <p class="text-muted mb-0">Technologies and tools I'm currently developing my skills in.</p>
+                <h2 id="featuredTitle"><span class="hash" aria-hidden="true">##</span>Featured Projects</h2>
+                <p class="section-comment">// the latest things I've built</p>
+            </div>
+            <a href="{{ url_for('public.project_page') }}" class="section-link">
+                ls projects/ {{ icon('arrow-right') }}
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for project in featured_projects %}
+            <div class="col-md-6 col-xxl-4">
+                {% include "_project_card.html" %}
+            </div>
+            {% endfor %}
+        </div>
+
+    </section>
+    {% endif %}
+
+
+    <section id="skills" class="home-section" aria-labelledby="skillsTitle">
+
+        <div class="section-heading">
+            <div>
+                <h2 id="skillsTitle"><span class="hash" aria-hidden="true">##</span>What I Work With</h2>
+                <p class="section-comment">// technologies and tools I'm developing my skills in</p>
             </div>
             <a href="{{ url_for('public.skills_page') }}" class="section-link">
-                All skills {{ icon('arrow-right') }}
+                cat skills.json {{ icon('arrow-right') }}
             </a>
         </div>
 
         {% if skill_groups %}
         <div class="row g-3">
             {% for category, skills in skill_groups %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 stack-card">
-                    <div class="card-body">
-                        <h3 class="h6 fw-bold mb-3">{{ category }}</h3>
-                        <div class="d-flex flex-wrap gap-1">
-                            {% for skill in skills %}
-                            <span class="badge bg-primary">{{ skill.name }}</span>
-                            {% endfor %}
-                        </div>
+            <div class="col-md-6 col-xxl-4">
+                <div class="window stack-card">
+                    <div class="window-bar">
+                        <h3 class="window-title h6 mb-0">{{ category | lower | replace(' ', '-') }}.json</h3>
+                        <span class="stack-count">{{ skills | length }} item{{ '' if skills | length == 1 else 's' }}</span>
                     </div>
+                    <ul class="token-list">
+                        {% for skill in skills %}
+                        <li class="badge bg-primary">{{ skill.name }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
             {% endfor %}
@@ -84,56 +146,76 @@
     </section>
 
 
-    {% if featured_projects %}
-    <section class="home-section">
+    {% if latest_certificates %}
+    <section class="home-section" aria-labelledby="certTitle">
 
         <div class="section-heading">
             <div>
-                <h2 class="fw-bold mb-1">Featured Projects</h2>
-                <p class="text-muted mb-0">The latest things I've built.</p>
+                <h2 id="certTitle"><span class="hash" aria-hidden="true">##</span>Latest Certificates</h2>
+                <p class="section-comment">// courses and certifications I've completed</p>
             </div>
-            <a href="{{ url_for('public.project_page') }}" class="section-link">
-                All projects {{ icon('arrow-right') }}
+            <a href="{{ url_for('public.certificates_page') }}" class="section-link">
+                cat certificates.yml {{ icon('arrow-right') }}
             </a>
         </div>
 
-        <div class="row g-4">
-            {% for project in featured_projects %}
-            <div class="col-md-6">
-                {% include "_project_card.html" %}
-            </div>
+        <ul class="commit-log">
+            {% for certificate in latest_certificates %}
+            <li class="commit">
+                <span class="commit-hash" aria-hidden="true">{{ '%07x' | format(certificate.id * 2246822519 % 268435456) }}</span>
+                <span class="commit-text">
+                    <span class="commit-title">{{ certificate.title }}</span>
+                    <span class="commit-meta">
+                        {{ certificate.issuer }}{% if certificate.issue_date %} · {{ certificate.issue_date.strftime('%b %Y') }}{% endif %}
+                    </span>
+                </span>
+                {% if certificate.credential_url %}
+                <a href="{{ certificate.credential_url }}" target="_blank" rel="noopener noreferrer"
+                    class="commit-link" aria-label="Verify {{ certificate.title }} (opens in a new tab)">
+                    {{ icon('external') }}
+                </a>
+                {% endif %}
+            </li>
             {% endfor %}
-        </div>
+        </ul>
 
     </section>
     {% endif %}
 
 
-    <section class="home-section">
+    {% include "_testimonials.html" %}
 
-        <div class="cta-panel text-center">
 
-            <h2 class="fw-bold">
-                Interested in what I've built?
-            </h2>
+    <section class="home-section" aria-labelledby="ctaTitle">
 
-            <p class="text-soft mb-4">
-                Take a look at my projects and see what I'm working on.
-            </p>
-
-            <div class="d-flex justify-content-center gap-2 flex-wrap">
-                <a href="{{ url_for('public.project_page') }}" class="btn btn-light btn-lg">
-                    Explore My Projects
-                </a>
-                <a href="{{ url_for('public.contact') }}" class="btn btn-outline-light btn-lg btn-icon">
-                    {{ icon('mail') }} Get in Touch
-                </a>
+        <div class="window cta-panel">
+            <div class="window-bar">
+                <span class="browser-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="window-title">./next-step.sh</span>
             </div>
 
+            <div class="cta-panel-body">
+                <p class="eyebrow mb-2">next step</p>
+                <h2 id="ctaTitle">Interested in what I've built?</h2>
+                <p class="text-soft mb-4">Take a look at my projects and see what I'm working on.</p>
+
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <a href="{{ url_for('public.project_page') }}" class="btn btn-primary btn-lg">
+                        Explore My Projects
+                    </a>
+                    <a href="{{ url_for('public.contact') }}" class="btn btn-outline-secondary btn-lg btn-icon">
+                        {{ icon('mail') }} Get in Touch
+                    </a>
+                </div>
+            </div>
         </div>
 
     </section>
 
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset_url('js/terminal.js') }}"></script>
 {% endblock %}

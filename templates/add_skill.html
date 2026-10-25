@@ -4,14 +4,15 @@
 
 {% block content %}
 
-<div class="container py-5">
+<div class="container">
 
-    <div class="mb-4">
-        <h1 class="fw-bold mb-1">Add Skill</h1>
-        <p class="text-muted">
-            Add a new skill to your portfolio.
-        </p>
-    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to dashboard)</span></a>
+
+    <header class="page-header">
+        <p class="eyebrow">admin</p>
+        <h1 class="fw-bold mb-2">Add Skill</h1>
+        <p class="text-muted mb-0">Add a new skill to your portfolio.</p>
+    </header>
 
 
     <div class="card shadow-sm border-0">
@@ -19,6 +20,7 @@
         <div class="card-body p-4">
 
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="mb-3">
 

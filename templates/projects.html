@@ -1,35 +1,110 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Projects{% endblock %}
 
 {% block content %}
 
+{% set shown = matches | length %}
+{% set filtered = query or selected %}
+
 <div class="container">
 
-    <a href="/" class="back-link">←</a>
+    <a href="/" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to home)</span></a>
 
     <header class="page-header">
-        <p class="eyebrow">Portfolio</p>
-        <h1 class="fw-bold mb-2">Projects</h1>
-        <p class="text-muted mb-0">
-            {{ projects | length }} project{{ '' if projects | length == 1 else 's' }} I've designed and built.
-        </p>
+        <p class="eyebrow">portfolio</p>
+        <h1 class="mb-2">Projects</h1>
+        <p class="text-muted mb-0">Things I've designed and built. Search or filter by technology.</p>
     </header>
 
     {% if projects %}
 
-    <div class="row g-4">
+    <form class="project-toolbar" method="GET" action="{{ url_for('public.project_page') }}" role="search"
+        id="projectFilters">
+
+        <div class="toolbar-row">
+            <div class="toolbar-search">
+                <label for="projectSearch" class="visually-hidden">Search projects</label>
+                <span class="toolbar-prompt" aria-hidden="true">grep</span>
+                <input type="search" class="form-control" id="projectSearch" name="q" value="{{ query }}"
+                    placeholder="name, description or technology..." autocomplete="off" maxlength="100"
+                    aria-describedby="projectCount">
+            </div>
+
+            {% if technologies | length > 1 %}
+            <details class="tech-dropdown" id="techDropdown">
+                <summary class="tech-dropdown-toggle">
+                    <span class="toolbar-label" aria-hidden="true">tech</span>
+                    <span class="visually-hidden">Filter by technology, selected:</span>
+                    <span class="tech-dropdown-value" id="techSummary">{{ selected | length if selected else 'any' }}</span>
+                    {{ icon('chevron-down', 'icon tech-dropdown-chevron') }}
+                </summary>
+
+                <fieldset class="tech-menu">
+                    <legend class="tech-menu-title">Built with all of</legend>
+                    {% for key, (name, count) in technologies %}
+                    <label class="tech-option">
+                        <input type="checkbox" class="form-check-input filter-input" name="tech" value="{{ key }}"
+                            {% if key in selected %}checked{% endif %}>
+                        <span class="tech-option-name">{{ name }}</span>
+                        <span class="filter-count">{{ count }}</span>
+                    </label>
+                    {% endfor %}
+                    <button type="button" class="tech-menu-clear" data-clear-techs>Clear selection</button>
+                </fieldset>
+            </details>
+            {% endif %}
+
+            <div class="toolbar-sort">
+                <label for="projectSort" class="toolbar-label">sort</label>
+                <select class="form-select" id="projectSort" name="sort">
+                    {% for value, (label, _) in sorts.items() %}
+                    <option value="{{ value }}" {% if value == sort %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <noscript><button type="submit" class="btn btn-primary">Apply</button></noscript>
+        </div>
+    </form>
+
+    <div class="result-bar">
+        <p class="result-count mb-0" id="projectCount" aria-live="polite">
+            {%- if filtered -%}
+            {{ shown }} of {{ projects | length }} project{{ '' if projects | length == 1 else 's' }}
+            {%- if query %} matching &ldquo;{{ query }}&rdquo;{% endif %}
+            {%- if selected %} built with {{ technologies | selectattr(0, 'in', selected) | map(attribute='1.0') | join(' + ') }}{% endif %}
+            {%- else -%}
+            {{ projects | length }} project{{ '' if projects | length == 1 else 's' }}
+            {%- endif -%}
+        </p>
+        <a href="{{ url_for('public.project_page') }}" class="result-clear" id="clearFilters"
+            {% if not filtered %}hidden{% endif %}>{{ icon('x') }} clear filters</a>
+    </div>
+
+    <div class="row g-4" id="projectGrid">
         {% for project in projects %}
-        <div class="col-md-6 col-lg-4">
+        <div class="col-md-6 col-xxl-4" data-project data-id="{{ project.id }}"
+            data-featured="{{ 1 if project.featured else 0 }}" data-order="{{ project.sort_order }}"
+            data-title="{{ project.title | lower }}" data-text="{{ project.search_text }}"
+            data-tech="{{ project.technology_list | map(attribute='name') | map('lower') | join('|') }}"
+            {% if project.id not in matches %}hidden{% endif %}>
             {% include "_project_card.html" %}
         </div>
         {% endfor %}
     </div>
 
+    <div class="empty-state" id="noResults" {% if shown %}hidden{% endif %}>
+        <h2 class="h5">No matching projects</h2>
+        <p class="text-muted mb-3">Try fewer words, or remove a technology filter.</p>
+        <a href="{{ url_for('public.project_page') }}" class="btn btn-outline-primary btn-sm" data-clear-filters>Clear filters</a>
+    </div>
+
     {% else %}
 
     <div class="empty-state">
-        <h2 class="h5 fw-bold">No projects yet</h2>
+        <h2 class="h5">No projects yet</h2>
         <p class="text-muted mb-0">Projects will show up here once they're added.</p>
     </div>
 
@@ -37,4 +112,114 @@
 
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var form = document.getElementById("projectFilters");
+        if (!form) return;
+
+        var search = document.getElementById("projectSearch");
+        var sort = document.getElementById("projectSort");
+        var grid = document.getElementById("projectGrid");
+        var count = document.getElementById("projectCount");
+        var clear = document.getElementById("clearFilters");
+        var empty = document.getElementById("noResults");
+        var cells = Array.prototype.slice.call(grid.querySelectorAll("[data-project]"));
+        var total = cells.length;
+        var timer = null;
+        var dropdown = document.getElementById("techDropdown");
+        var techSummary = document.getElementById("techSummary");
+
+        function selectedTechs() {
+            return Array.prototype.map.call(form.querySelectorAll(".filter-input:checked"), function (input) {
+                return { key: input.value, name: input.closest("label").querySelector(".tech-option-name").textContent.trim() };
+            });
+        }
+
+        function plural(n) { return n + " project" + (n === 1 ? "" : "s"); }
+
+        var sorters = {
+            featured: function (a, b) {
+                return (b.dataset.featured - a.dataset.featured) ||
+                    (a.dataset.order - b.dataset.order) || (b.dataset.id - a.dataset.id);
+            },
+            newest: function (a, b) { return b.dataset.id - a.dataset.id; },
+            oldest: function (a, b) { return a.dataset.id - b.dataset.id; },
+            name: function (a, b) { return a.dataset.title.localeCompare(b.dataset.title); }
+        };
+
+        function apply() {
+            var query = search.value.trim();
+            var words = query.toLowerCase().split(/\s+/).filter(Boolean);
+            var techs = selectedTechs();
+            var shown = 0;
+
+            cells.sort(sorters[sort.value] || sorters.featured).forEach(function (cell) {
+                var used = cell.dataset.tech.split("|");
+                var match = words.every(function (word) { return cell.dataset.text.indexOf(word) > -1; }) &&
+                    techs.every(function (tech) { return used.indexOf(tech.key) > -1; });
+                cell.hidden = !match;
+                if (match) shown++;
+                grid.appendChild(cell);
+            });
+
+            var filtered = words.length || techs.length;
+            var text = filtered ? shown + " of " + plural(total) : plural(total);
+            if (query) text += " matching “" + query + "”";
+            if (techs.length) text += " built with " + techs.map(function (t) { return t.name; }).join(" + ");
+            count.textContent = text;
+            clear.hidden = !filtered;
+            if (techSummary) techSummary.textContent = techs.length || "any";
+            empty.hidden = shown > 0;
+
+            var params = new URLSearchParams();
+            if (query) params.set("q", query);
+            techs.forEach(function (tech) { params.append("tech", tech.key); });
+            if (sort.value !== "featured") params.set("sort", sort.value);
+            var qs = params.toString();
+            history.replaceState(null, "", location.pathname + (qs ? "?" + qs : ""));
+        }
+
+        search.addEventListener("input", function () {
+            clearTimeout(timer);
+            timer = setTimeout(apply, 120);
+        });
+        form.addEventListener("change", apply);
+        form.addEventListener("submit", function (event) { event.preventDefault(); apply(); });
+
+        if (dropdown) {
+            dropdown.querySelector("[data-clear-techs]").addEventListener("click", function () {
+                dropdown.querySelectorAll(".filter-input").forEach(function (input) { input.checked = false; });
+                apply();
+            });
+
+            document.addEventListener("click", function (event) {
+                if (dropdown.open && !dropdown.contains(event.target)) dropdown.open = false;
+            });
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" && dropdown.open) {
+                    var hadFocus = dropdown.contains(document.activeElement);
+                    dropdown.open = false;
+                    if (hadFocus) dropdown.querySelector("summary").focus();
+                }
+            });
+        }
+
+        search.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && search.value) { search.value = ""; apply(); }
+        });
+
+        document.querySelectorAll("#clearFilters, [data-clear-filters]").forEach(function (link) {
+            link.addEventListener("click", function (event) {
+                event.preventDefault();
+                search.value = "";
+                form.querySelectorAll(".filter-input").forEach(function (input) { input.checked = false; });
+                apply();
+                search.focus();
+            });
+        });
+    })();
+</script>
 {% endblock %}

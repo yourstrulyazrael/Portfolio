@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}About{% endblock %}
+{% block description %}About {{ profile.full_name }}: {{ profile.headline }}.{% if profile.availability %} {{ profile.availability }}.{% endif %}{% endblock %}
+
+{% block content %}
+
+{% set skill_names = [] %}
+{% for _, skills in skill_groups %}{% for skill in skills %}{% set _ = skill_names.append(skill.name) %}{% endfor %}{% endfor %}
+
+<div class="container">
+
+    <header class="page-header">
+        <p class="eyebrow">about</p>
+        <h1 class="mb-2">About Me</h1>
+        <p class="text-muted mb-0">{{ profile.headline }}</p>
+    </header>
+
+    <div class="about-layout">
+
+        <div class="about-main">
+
+            <section aria-labelledby="bioTitle">
+                <h2 class="visually-hidden" id="bioTitle">Bio</h2>
+                <div class="about-bio">
+                    {% for paragraph in profile.bio_paragraphs %}
+                    <p>{{ paragraph }}</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="window mt-4" aria-labelledby="factsTitle">
+                <div class="window-bar">
+                    <span class="browser-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                    <h2 class="window-title h6 mb-0" id="factsTitle">profile.json</h2>
+                </div>
+                <dl class="json-facts">
+                    <div><dt>name</dt><dd class="str">{{ profile.full_name }}</dd></div>
+                    <div><dt>role</dt><dd class="str">{{ profile.headline }}</dd></div>
+                    {% if profile.location %}<div><dt>location</dt><dd class="str">{{ profile.location }}</dd></div>{% endif %}
+                    {% if profile.availability %}<div><dt>lookingFor</dt><dd class="str">{{ profile.availability }}</dd></div>{% endif %}
+                    <div><dt>projectsBuilt</dt><dd class="num">{{ project_count }}</dd></div>
+                    {% if skill_names %}
+                    <div><dt>stack</dt><dd class="arr">{% for name in skill_names[:10] %}<span class="str">{{ name }}</span>{% endfor %}{% if skill_names | length > 10 %}<span class="more">+{{ skill_names | length - 10 }} more</span>{% endif %}</dd></div>
+                    {% endif %}
+                    <div><dt>alwaysLearning</dt><dd class="bool">true</dd></div>
+                </dl>
+            </section>
+
+        </div>
+
+        <aside class="about-side" aria-label="Contact and CV">
+            <div class="card profile-card">
+                <div class="card-body p-4">
+
+                    {% set name_parts = profile.full_name.split() %}
+                    <div class="profile-avatar" aria-hidden="true">
+                        {{ (name_parts[0][:1] ~ (name_parts[-1][:1] if name_parts | length > 1 else '')) | upper }}
+                    </div>
+                    <p class="profile-name">{{ profile.full_name }}</p>
+                    <p class="profile-headline">{{ profile.headline }}</p>
+
+                    {% if profile.availability %}
+                    <p class="availability-pill"><span class="live-dot" aria-hidden="true"></span>{{ profile.availability }}</p>
+                    {% endif %}
+
+                    <ul class="profile-links">
+                        {% if profile.location %}
+                        <li>{{ icon('map-pin') }}<span>{{ profile.location }}</span></li>
+                        {% endif %}
+                        {% if profile.email %}
+                        <li>{{ icon('mail') }}<a href="mailto:{{ profile.email }}">{{ profile.email }}</a></li>
+                        {% endif %}
+                        {% for label, url, glyph in profile.social_links %}
+                        <li>{{ icon(glyph) }}<a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+                        {% endfor %}
+                    </ul>
+
+                    {% if profile.cv_file %}
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('public.cv', download=1) }}" class="btn btn-primary btn-icon">
+                            {{ icon('download') }} Download CV
+                        </a>
+                        <a href="{{ url_for('public.cv') }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-icon">
+                            {{ icon('file') }} View CV<span class="visually-hidden"> (opens in a new tab)</span>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('public.contact') }}" class="btn btn-outline-primary btn-icon w-100 {% if profile.cv_file %}mt-2{% endif %}">
+                        {{ icon('mail') }} Send a Message
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    {% include "_testimonials.html" %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if testimonial else 'Add' }} Testimonial{% endblock %}
+
+{% block content %}
+
+{% set editing = testimonial is not none %}
+{% set t = testimonial or {} %}
+
+<div class="container">
+
+    <a href="{{ url_for('admin.dashboard') }}#testimonials" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to dashboard)</span></a>
+
+    <header class="page-header">
+        <p class="eyebrow">admin</p>
+        <h1 class="mb-2">{{ 'Edit' if editing else 'Add' }} Testimonial</h1>
+        <p class="text-muted mb-0">A short quote from a teacher, teammate, client or supervisor. Ask them first.</p>
+    </header>
+
+    <div class="card">
+        <div class="card-body p-4">
+
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                    <label for="quote" class="form-label">Quote</label>
+                    <textarea class="form-control" id="quote" name="quote" rows="5" maxlength="2000" required
+                        placeholder="What did they say about working with you?">{{ t.quote or '' }}</textarea>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" maxlength="100" required
+                            value="{{ t.name or '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="role" class="form-label">Role / relationship</label>
+                        <input type="text" class="form-control" id="role" name="role" maxlength="150"
+                            value="{{ t.role or '' }}" placeholder="e.g. Capstone adviser, PHINMA University">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="link_url" class="form-label">Link <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="url" class="form-control" id="link_url" name="link_url" maxlength="255"
+                            value="{{ t.link_url or '' }}" placeholder="https://www.linkedin.com/in/...">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="sort_order" class="form-label">Display order</label>
+                        <input type="number" class="form-control" id="sort_order" name="sort_order" step="1"
+                            value="{{ t.sort_order or 0 }}" aria-describedby="orderHelp">
+                        <div class="form-text" id="orderHelp">Lower numbers come first.</div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">{{ 'Save Changes' if editing else 'Add Testimonial' }}</button>
+                    <a href="{{ url_for('admin.dashboard') }}#testimonials" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

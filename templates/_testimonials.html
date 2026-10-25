@@ -1,0 +1,40 @@
+{% from "_icons.html" import icon %}
+{% if testimonials %}
+<section class="home-section" aria-labelledby="testimonialsTitle">
+
+    <div class="section-heading">
+        <div>
+            <h2 id="testimonialsTitle"><span class="hash" aria-hidden="true">##</span>What People Say</h2>
+            <p class="section-comment">// from teachers, teammates and clients I've worked with</p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for testimonial in testimonials %}
+        <div class="col-lg-6 {% if testimonials | length > 2 %}col-xxl-4{% endif %}">
+            <figure class="card testimonial h-100 mb-0">
+                <div class="card-body d-flex flex-column">
+                    <span class="testimonial-mark" aria-hidden="true">{{ icon('quote') }}</span>
+                    <blockquote class="testimonial-quote">
+                        <p class="mb-0">{{ testimonial.quote }}</p>
+                    </blockquote>
+                    <figcaption class="testimonial-author mt-auto">
+                        <span class="testimonial-avatar" aria-hidden="true">{{ testimonial.name[:1] | upper }}</span>
+                        <span>
+                            {% if testimonial.link_url %}
+                            <a href="{{ testimonial.link_url }}" target="_blank" rel="noopener noreferrer"
+                                class="testimonial-name">{{ testimonial.name }}</a>
+                            {% else %}
+                            <span class="testimonial-name">{{ testimonial.name }}</span>
+                            {% endif %}
+                            {% if testimonial.role %}<span class="testimonial-role">{{ testimonial.role }}</span>{% endif %}
+                        </span>
+                    </figcaption>
+                </div>
+            </figure>
+        </div>
+        {% endfor %}
+    </div>
+
+</section>
+{% endif %}

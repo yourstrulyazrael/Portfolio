@@ -6,10 +6,10 @@
 
 <div class="container">
 
-    <a href="/" class="back-link">←</a>
+    <a href="/" class="back-link"><span aria-hidden="true">←</span> cd ..<span class="visually-hidden"> (back to home)</span></a>
 
     <header class="page-header">
-        <p class="eyebrow">Achievements</p>
+        <p class="eyebrow">achievements</p>
         <h1 class="fw-bold mb-2">Certificates</h1>
         <p class="text-muted mb-0">
             Courses, certifications and achievements I've earned along the way.
@@ -25,7 +25,7 @@
         {% set is_pdf = certificate.file and certificate.file.lower().endswith('.pdf') %}
         {% set file_url = media_url('certificates', certificate.file) if certificate.file else None %}
 
-        <div class="col-md-6 col-lg-4">
+        <div class="col-md-6 col-xl-4">
 
             <div class="card shadow-sm border-0 h-100 certificate-card">
 

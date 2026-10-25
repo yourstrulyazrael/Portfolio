@@ -1,0 +1,77 @@
+{% set p = project or {} %}
+
+<fieldset class="form-section">
+    <legend class="form-section-title">Case study <span class="text-muted fw-normal">(optional, shown on the project page)</span></legend>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label for="role" class="form-label">Your role</label>
+            <input type="text" class="form-control" id="role" name="role" maxlength="150"
+                value="{{ p.role or '' }}" placeholder="e.g. Full-stack developer (team of 3)">
+        </div>
+        <div class="col-md-6">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-select" id="status" name="status">
+                {% for value, label in statuses.items() %}
+                <option value="{{ value }}" {% if (p.status or 'completed') == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-6">
+            <label for="started_on" class="form-label">Started</label>
+            <input type="month" class="form-control" id="started_on" name="started_on"
+                value="{{ p.started_on.strftime('%Y-%m') if p.started_on else '' }}">
+        </div>
+        <div class="col-sm-6">
+            <label for="finished_on" class="form-label">Finished</label>
+            <input type="month" class="form-control" id="finished_on" name="finished_on"
+                value="{{ p.finished_on.strftime('%Y-%m') if p.finished_on else '' }}" aria-describedby="finishedHelp">
+            <div class="form-text" id="finishedHelp">Leave blank while it's still in progress.</div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="problem" class="form-label">The problem</label>
+        <textarea class="form-control" id="problem" name="problem" rows="3"
+            placeholder="What need or pain point did this project address?">{{ p.problem or '' }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="solution" class="form-label">The solution</label>
+        <textarea class="form-control" id="solution" name="solution" rows="3"
+            placeholder="How does the project solve it? Key decisions you made.">{{ p.solution or '' }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="features" class="form-label">Key features</label>
+        <textarea class="form-control" id="features" name="features" rows="4" aria-describedby="featuresHelp"
+            placeholder="Offline mode&#10;Role-based access&#10;Sales reports">{{ p.features or '' }}</textarea>
+        <div class="form-text" id="featuresHelp">One feature per line.</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="challenges" class="form-label">Challenges &amp; lessons learned</label>
+        <textarea class="form-control" id="challenges" name="challenges" rows="3"
+            placeholder="What was hard, and what would you do differently?">{{ p.challenges or '' }}</textarea>
+    </div>
+</fieldset>
+
+<fieldset class="form-section">
+    <legend class="form-section-title">Visibility</legend>
+    <div class="row g-3 align-items-end mb-3">
+        <div class="col-sm-6">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="featured" name="featured" value="1"
+                    {% if p.featured %}checked{% endif %} aria-describedby="featuredHelp">
+                <label class="form-check-label" for="featured">Feature on the home page</label>
+            </div>
+            <div class="form-text" id="featuredHelp">If nothing is featured, the newest projects are shown.</div>
+        </div>
+        <div class="col-sm-6">
+            <label for="sort_order" class="form-label">Display order</label>
+            <input type="number" class="form-control" id="sort_order" name="sort_order" step="1"
+                value="{{ p.sort_order or 0 }}" aria-describedby="orderHelp">
+            <div class="form-text" id="orderHelp">Lower numbers come first.</div>
+        </div>
+    </div>
+</fieldset>
